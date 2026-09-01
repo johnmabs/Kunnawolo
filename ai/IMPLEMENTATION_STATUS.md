@@ -7,7 +7,7 @@ Dernière mise à jour: 2026-09-01
 | 0 | DONE | — |
 | 1 | DONE | — |
 | 2 | DONE | — |
-| 3 | IN_PROGRESS | — |
+| 3 | DONE | — |
 | 4 | PLANNED | — |
 | 5 | PLANNED | — |
 | 6 | PLANNED | — |

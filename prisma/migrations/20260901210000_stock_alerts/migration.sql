@@ -1,0 +1,1 @@
+ALTER TABLE "StockLevel" ADD COLUMN "lowStockThreshold" DECIMAL(18,3) NOT NULL DEFAULT 0;

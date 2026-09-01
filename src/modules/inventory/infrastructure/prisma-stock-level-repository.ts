@@ -4,8 +4,8 @@ import { Quantity } from "@/shared/domain/quantity";
 import type { StockLevelRepository } from "../application/ports/stock-level-repository";
 import { StockLevel } from "../domain/stock-level";
 
-function toStockLevel(row: Readonly<{ id: string; organizationId: string; shopId: string; productId: string; quantity: { toString(): string } }>): StockLevel {
-  return StockLevel.reconstitute(Identifier.fromString(row.id), Identifier.fromString(row.organizationId), Identifier.fromString(row.shopId), Identifier.fromString(row.productId), Quantity.fromNumber(Number(row.quantity.toString())));
+function toStockLevel(row: Readonly<{ id: string; organizationId: string; shopId: string; productId: string; quantity: { toString(): string }; lowStockThreshold: { toString(): string } }>): StockLevel {
+  return StockLevel.reconstitute(Identifier.fromString(row.id), Identifier.fromString(row.organizationId), Identifier.fromString(row.shopId), Identifier.fromString(row.productId), Quantity.fromNumber(Number(row.quantity.toString())), Quantity.fromNumber(Number(row.lowStockThreshold.toString())));
 }
 
 export class PrismaStockLevelRepository implements StockLevelRepository {
@@ -22,5 +22,13 @@ export class PrismaStockLevelRepository implements StockLevelRepository {
   public async find(organizationId: string, shopId: string, productId: string): Promise<StockLevel | null> {
     const row = await this.prisma.stockLevel.findUnique({ where: { organizationId_shopId_productId: { organizationId, shopId, productId } } });
     return row === null ? null : toStockLevel(row);
+  }
+  public async setLowStockThreshold(level: StockLevel, actorId: string | null): Promise<StockLevel> {
+    const row = await this.prisma.$transaction(async (transaction) => { const updated = await transaction.stockLevel.update({ where: { id: level.id.value }, data: { lowStockThreshold: level.lowStockThreshold.value } }); await transaction.organizationAudit.create({ data: { id: crypto.randomUUID(), organizationId: level.organizationId.value, actorId, action: "stock_level.low_threshold_set" } }); return updated; });
+    return toStockLevel(row);
+  }
+  public async findLowStock(organizationId: string, shopId: string): Promise<StockLevel[]> {
+    const rows = await this.prisma.stockLevel.findMany({ where: { organizationId, shopId, lowStockThreshold: { gt: 0 } } });
+    return rows.map(toStockLevel).filter((level) => level.isLowStock());
   }
 }
