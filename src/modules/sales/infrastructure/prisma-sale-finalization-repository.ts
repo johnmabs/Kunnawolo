@@ -22,6 +22,11 @@ export class PrismaSaleFinalizationRepository implements SaleFinalizationReposit
     return row === null ? null : toFinalization(row);
   }
 
+  public async findByCartId(organizationId: string, cartId: string): Promise<SaleFinalization | null> {
+    const row = await this.prisma.saleCart.findFirst({ where: { id: cartId, organizationId, status: "FINALIZED" }, include: { lines: true } });
+    return row === null ? null : toFinalization(row);
+  }
+
   public async commit(finalization: SaleFinalization): Promise<void> {
     await this.prisma.$transaction(async (transaction) => {
       const reserved = await transaction.saleCart.updateMany({ where: { id: finalization.cartId.value, organizationId: finalization.organizationId.value, status: "DRAFT" }, data: { status: "FINALIZING", finalizationReference: finalization.reference, finalizedByActorId: finalization.actorId, finalizedAt: finalization.finalizedAt } });

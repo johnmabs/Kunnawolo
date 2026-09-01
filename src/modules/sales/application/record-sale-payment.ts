@@ -1,0 +1,9 @@
+import { DomainError } from "@/shared/domain/domain-error";
+import { Identifier } from "@/shared/domain/identifier";
+import { Money } from "@/shared/domain/money";
+import type { Clock } from "@/shared/domain/clock";
+import type { IdentifierGenerator } from "@/modules/organization/application/ports/identifier-generator";
+import { SalePayment } from "../domain/sale-payment";
+import type { SaleFinalizationRepository } from "./ports/sale-finalization-repository";
+import type { SalePaymentRepository } from "./ports/sale-payment-repository";
+export class RecordSalePayment { public constructor(private readonly finalizations: SaleFinalizationRepository, private readonly payments: SalePaymentRepository, private readonly ids: IdentifierGenerator, private readonly clock: Clock) {} public async execute(input: Readonly<{ organizationId: string; cartId: string; paymentReference: string; method: string; amountMinor: number; currency: string; actorId: string | null }>): Promise<SalePayment> { const reference = input.paymentReference.trim().normalize("NFC"); const existing = await this.payments.findByReference(input.organizationId, reference); if (existing !== null) { if (existing.cartId.value !== input.cartId) throw new DomainError("sales.payment_reference_taken", "The payment reference is already used."); return existing; } const finalization = await this.finalizations.findByCartId(input.organizationId, input.cartId); if (finalization === null) throw new DomainError("sales.sale_not_finalized", "The sale is not finalized in this organization."); const payment = SalePayment.record({ id: this.ids.next(), finalization, paymentReference: reference, method: input.method, amount: Money.fromMinor(input.amountMinor, input.currency), actorId: input.actorId, paidAt: this.clock.now() }); return this.payments.record(payment); } }

@@ -32,4 +32,5 @@ export class SaleCart {
 export class SaleFinalization {
   private constructor(public readonly cartId: Identifier, public readonly organizationId: Identifier, public readonly shopId: Identifier, public readonly lines: readonly SaleLine[], public readonly reference: string, public readonly actorId: string | null, public readonly finalizedAt: Date) {}
   public static create(cartId: Identifier, organizationId: Identifier, shopId: Identifier, lines: readonly SaleLine[], reference: string, actorId: string | null, finalizedAt: Date): SaleFinalization { return new SaleFinalization(cartId, organizationId, shopId, lines, reference.trim().normalize("NFC"), actorId, finalizedAt); }
+  public totalAmountMinor(): number { const amount = this.lines.reduce((total, line) => total + line.unitPrice.amountMinor * line.quantity.value - line.discount.amountMinor, 0); if (!Number.isSafeInteger(amount) || amount <= 0) throw new DomainError("sales.invalid_payment_amount", "The finalized sale amount must be a positive integer in minor units."); return amount; }
 }
