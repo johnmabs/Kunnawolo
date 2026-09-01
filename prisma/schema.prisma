@@ -21,6 +21,7 @@ model Organization {
   productPrices ProductPrice[]
   stockLevels   StockLevel[]
   stockMovements StockMovement[]
+  saleCarts      SaleCart[]
 }
 
 model Category {
@@ -66,6 +67,7 @@ model Product {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   prices         ProductPrice[]
   stockLevels    StockLevel[]
+  saleLines      SaleLine[]
   stockMovements StockMovement[]
 
   @@unique([organizationId, code])
@@ -119,6 +121,7 @@ model Shop {
   assignments    ShopAssignment[]
   stockLevels    StockLevel[]
   stockMovements StockMovement[]
+  saleCarts      SaleCart[]
 
   @@unique([organizationId, code])
 }
@@ -156,6 +159,34 @@ model StockMovement {
 
   @@index([organizationId, shopId, productId, occurredAt])
   @@unique([organizationId, idempotencyKey])
+}
+
+model SaleCart {
+  id             String     @id
+  organizationId String
+  shopId         String
+  status         String     @db.VarChar(16) @default("DRAFT")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  shop           Shop       @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  lines          SaleLine[]
+  @@index([organizationId, shopId, status])
+}
+
+model SaleLine {
+  id                   String   @id
+  saleCartId           String
+  productId            String
+  productNameSnapshot  String   @db.Text
+  quantity             Decimal  @db.Decimal(18, 3)
+  unitPriceMinor       BigInt
+  unitCostMinor        BigInt
+  currency             String   @db.VarChar(3)
+  discountMinor        BigInt   @default(0)
+  saleCart             SaleCart @relation(fields: [saleCartId], references: [id], onDelete: Restrict)
+  product              Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  @@index([saleCartId])
 }
 
 model OrganizationAudit {

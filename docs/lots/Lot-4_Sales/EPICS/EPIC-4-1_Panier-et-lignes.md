@@ -29,4 +29,8 @@ Lots 0-3 et Epics antérieures du Lot.
 
 ## Statut
 
-PLANNED
+DONE
+
+## Vérification
+
+2026-09-01 : migration Prisma, lint, typecheck, tests et build exécutés.

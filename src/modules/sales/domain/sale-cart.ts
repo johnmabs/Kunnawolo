@@ -1,0 +1,6 @@
+import { DomainError } from "@/shared/domain/domain-error";
+import { Identifier } from "@/shared/domain/identifier";
+import { Money } from "@/shared/domain/money";
+import { Quantity } from "@/shared/domain/quantity";
+export class SaleLine { public constructor(public readonly id: Identifier, public readonly productId: Identifier, public readonly productNameSnapshot: string, public readonly quantity: Quantity, public readonly unitPrice: Money, public readonly unitCost: Money, public readonly discount: Money) { if (!quantity.isPositive()) throw new DomainError("sales.invalid_line_quantity", "A sale line quantity must be positive."); if (unitPrice.currency !== unitCost.currency || unitPrice.currency !== discount.currency) throw new DomainError("sales.currency_mismatch", "Sale snapshots must share a currency."); if (discount.amountMinor < 0 || discount.amountMinor > unitPrice.amountMinor * quantity.value) throw new DomainError("sales.invalid_discount", "Discount is invalid."); } }
+export class SaleCart { public constructor(public readonly id: Identifier, public readonly organizationId: Identifier, public readonly shopId: Identifier, public readonly lines: readonly SaleLine[] = []) {} public add(line: SaleLine): SaleCart { return new SaleCart(this.id, this.organizationId, this.shopId, [...this.lines, line]); } }
