@@ -1,0 +1,1 @@
+-- Baseline technique : aucun modèle métier n'est introduit avant son Epic.
