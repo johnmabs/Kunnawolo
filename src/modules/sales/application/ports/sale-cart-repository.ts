@@ -1,2 +1,8 @@
 import type { SaleCart, SaleLine } from "../../domain/sale-cart";
-export interface SaleCartRepository { save(cart: SaleCart, actorId: string | null): Promise<void>; find(organizationId: string, id: string): Promise<SaleCart | null>; addLine(cartId: string, line: SaleLine, actorId: string | null): Promise<void>; }
+export type SaleAudit = Readonly<{ organizationId: string; actorId: string | null; action: string }>;
+export interface SaleCartRepository {
+  create(cart: SaleCart, audit: SaleAudit): Promise<void>;
+  find(organizationId: string, cartId: string): Promise<SaleCart | null>;
+  saveLine(organizationId: string, cartId: string, line: SaleLine, audit: SaleAudit): Promise<void>;
+  removeLine(organizationId: string, cartId: string, lineId: string, audit: SaleAudit): Promise<void>;
+}

@@ -33,4 +33,4 @@ DONE
 
 ## Vérification
 
-2026-09-01 : migration Prisma, lint, typecheck, tests et build exécutés.
+2026-09-01 : `pnpm db:migrate:deploy`, `pnpm lint`, `pnpm typecheck`, `pnpm test` et `pnpm build` réussissent.
