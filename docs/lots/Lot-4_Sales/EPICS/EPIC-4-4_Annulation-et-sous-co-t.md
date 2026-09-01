@@ -29,4 +29,4 @@ Lots 0-3 et Epics antérieures du Lot.
 
 ## Statut
 
-PLANNED
+DONE — 2026-09-01 : `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` et `pnpm db:migrate:status` réussis.

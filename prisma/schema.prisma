@@ -23,6 +23,7 @@ model Organization {
   stockMovements StockMovement[]
   saleCarts      SaleCart[]
   salePayments   SalePayment[]
+  saleCancellations SaleCancellation[]
   salesSequence  SalesSequence?
 }
 
@@ -172,15 +173,32 @@ model SaleCart {
   finalizedByActorId String?
   finalizedAt    DateTime?
   businessReference String? @db.Text
+  underCostReason String? @db.Text
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   shop           Shop       @relation(fields: [shopId], references: [id], onDelete: Restrict)
   lines          SaleLine[]
   payment        SalePayment?
+  cancellation   SaleCancellation?
   @@index([organizationId, shopId, status])
   @@unique([organizationId, finalizationReference])
   @@unique([organizationId, businessReference])
+}
+
+model SaleCancellation {
+  id                    String   @id
+  organizationId        String
+  saleCartId            String   @unique
+  cancellationReference String   @db.Text
+  reason                String   @db.Text
+  actorId               String?
+  cancelledAt           DateTime
+  createdAt             DateTime @default(now())
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  saleCart              SaleCart @relation(fields: [saleCartId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, cancellationReference])
 }
 
 model SalePayment {

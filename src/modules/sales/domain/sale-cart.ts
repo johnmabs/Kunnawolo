@@ -14,6 +14,7 @@ export class SaleLine {
     if (name.length === 0) throw new DomainError("sales.invalid_product_snapshot", "A product name snapshot must be non-empty.");
     return new SaleLine(input.id, input.productId, name, input.quantity, input.unitPrice, input.unitCost, input.discount);
   }
+  public isBelowCost(): boolean { return this.unitPrice.amountMinor * this.quantity.value - this.discount.amountMinor < this.unitCost.amountMinor * this.quantity.value; }
 }
 
 export class SaleCart {
@@ -21,16 +22,18 @@ export class SaleCart {
   public static draft(id: Identifier, organizationId: Identifier, shopId: Identifier, lines: readonly SaleLine[] = []): SaleCart { return new SaleCart(id, organizationId, shopId, lines); }
   public addOrReplace(line: SaleLine): SaleCart { return new SaleCart(this.id, this.organizationId, this.shopId, [...this.lines.filter(({ id }) => !id.equals(line.id)), line]); }
   public remove(lineId: Identifier): SaleCart { return new SaleCart(this.id, this.organizationId, this.shopId, this.lines.filter(({ id }) => !id.equals(lineId))); }
-  public finalize(reference: string, actorId: string | null, finalizedAt: Date): SaleFinalization {
+  public finalize(reference: string, actorId: string | null, finalizedAt: Date, underCostReason: string | null = null): SaleFinalization {
     if (this.lines.length === 0) throw new DomainError("sales.empty_cart", "An empty cart cannot be finalized.");
     const normalizedReference = reference.trim().normalize("NFC");
     if (normalizedReference.length === 0) throw new DomainError("sales.invalid_finalization_reference", "A finalization reference must be non-empty.");
-    return SaleFinalization.create(this.id, this.organizationId, this.shopId, this.lines, normalizedReference, actorId, finalizedAt);
+    const normalizedUnderCostReason = underCostReason?.trim().normalize("NFC") || null;
+    if (this.lines.some((line) => line.isBelowCost()) && normalizedUnderCostReason === null) throw new DomainError("sales.under_cost_reason_required", "A sale below cost requires a reason.");
+    return SaleFinalization.create(this.id, this.organizationId, this.shopId, this.lines, normalizedReference, actorId, finalizedAt, normalizedUnderCostReason);
   }
 }
 
 export class SaleFinalization {
-  private constructor(public readonly cartId: Identifier, public readonly organizationId: Identifier, public readonly shopId: Identifier, public readonly lines: readonly SaleLine[], public readonly reference: string, public readonly actorId: string | null, public readonly finalizedAt: Date) {}
-  public static create(cartId: Identifier, organizationId: Identifier, shopId: Identifier, lines: readonly SaleLine[], reference: string, actorId: string | null, finalizedAt: Date): SaleFinalization { return new SaleFinalization(cartId, organizationId, shopId, lines, reference.trim().normalize("NFC"), actorId, finalizedAt); }
+  private constructor(public readonly cartId: Identifier, public readonly organizationId: Identifier, public readonly shopId: Identifier, public readonly lines: readonly SaleLine[], public readonly reference: string, public readonly actorId: string | null, public readonly finalizedAt: Date, public readonly underCostReason: string | null) {}
+  public static create(cartId: Identifier, organizationId: Identifier, shopId: Identifier, lines: readonly SaleLine[], reference: string, actorId: string | null, finalizedAt: Date, underCostReason: string | null = null): SaleFinalization { return new SaleFinalization(cartId, organizationId, shopId, lines, reference.trim().normalize("NFC"), actorId, finalizedAt, underCostReason); }
   public totalAmountMinor(): number { const amount = this.lines.reduce((total, line) => total + line.unitPrice.amountMinor * line.quantity.value - line.discount.amountMinor, 0); if (!Number.isSafeInteger(amount) || amount <= 0) throw new DomainError("sales.invalid_payment_amount", "The finalized sale amount must be a positive integer in minor units."); return amount; }
 }
