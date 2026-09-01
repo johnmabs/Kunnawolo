@@ -29,4 +29,4 @@ Lots 0-1 et Epics antérieures du Lot.
 
 ## Statut
 
-PLANNED
+DONE

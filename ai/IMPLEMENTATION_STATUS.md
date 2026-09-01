@@ -4,10 +4,10 @@ Dernière mise à jour: 2026-09-01
 
 | Lot | Statut | Epic active |
 |---:|---|---|
-| 0 | IN_PROGRESS | 0.9 — Préparation au déploiement |
-| 1 | PLANNED | — |
-| 2 | PLANNED | — |
-| 3 | PLANNED | — |
+| 0 | DONE | — |
+| 1 | DONE | — |
+| 2 | DONE | — |
+| 3 | IN_PROGRESS | — |
 | 4 | PLANNED | — |
 | 5 | PLANNED | — |
 | 6 | PLANNED | — |

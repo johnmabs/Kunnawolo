@@ -1,0 +1,14 @@
+import "dotenv/config";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createPrismaClient } from "@/infrastructure/prisma/prisma-client";
+import { Identifier } from "@/shared/domain/identifier";
+import { EnsureStockLevel } from "../application/ensure-stock-level";
+import { GetStockLevel } from "../application/get-stock-level";
+import { PrismaInventoryScope } from "./prisma-inventory-scope";
+import { PrismaStockLevelRepository } from "./prisma-stock-level-repository";
+
+const databaseUrl = process.env.DATABASE_URL; if (databaseUrl === undefined) throw new Error("DATABASE_URL is required for stock level integration tests.");
+const prisma = createPrismaClient(databaseUrl); const organizationId = "stock-integration-org"; const otherOrganizationId = "stock-integration-other"; const shopId = "stock-integration-shop"; const productId = "stock-integration-product";
+beforeAll(async () => { await prisma.organization.createMany({ data: [{ id: organizationId, name: "Stock", currency: "XOF" }, { id: otherOrganizationId, name: "Autre", currency: "XOF" }], skipDuplicates: true }); await prisma.shop.upsert({ where: { id: shopId }, create: { id: shopId, organizationId, code: "STK", name: "Boutique inactive", isActive: false }, update: {} }); await prisma.product.upsert({ where: { id: productId }, create: { id: productId, organizationId, name: "Nsiirin", trackInventory: true }, update: { trackInventory: true } }); });
+afterAll(async () => { await prisma.stockLevel.deleteMany({ where: { organizationId } }); await prisma.product.deleteMany({ where: { id: productId } }); await prisma.shop.deleteMany({ where: { id: shopId } }); await prisma.organizationAudit.deleteMany({ where: { organizationId } }); await prisma.organization.deleteMany({ where: { id: { in: [organizationId, otherOrganizationId] } } }); await prisma.$disconnect(); });
+describe("PrismaStockLevelRepository", () => { it("creates one audited zero level for an inactive historical shop", async () => { const repository = new PrismaStockLevelRepository(prisma); const ensure = new EnsureStockLevel(new PrismaInventoryScope(prisma), repository, { next: () => Identifier.fromString("stock-integration-level") }); await ensure.execute({ organizationId, shopId, productId, actorId: "actor" }); await ensure.execute({ organizationId, shopId, productId, actorId: "actor" }); await expect(new GetStockLevel(repository).execute({ organizationId, shopId, productId })).resolves.toMatchObject({ quantity: { value: 0 } }); await expect(prisma.stockLevel.count({ where: { organizationId, shopId, productId } })).resolves.toBe(1); await expect(prisma.organizationAudit.count({ where: { organizationId, action: "stock_level.initialized" } })).resolves.toBe(1); await expect(ensure.execute({ organizationId: otherOrganizationId, shopId, productId, actorId: "actor" })).rejects.toMatchObject({ code: "inventory.shop_not_found" }); }); });

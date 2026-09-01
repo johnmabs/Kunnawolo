@@ -6,3 +6,162 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Organization {
+  id        String              @id
+  name      String              @db.Text
+  currency  String              @db.VarChar(3)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  audits    OrganizationAudit[]
+  shops     Shop[]
+  memberships OrganizationMembership[]
+  categories Category[]
+  products   Product[]
+  productPrices ProductPrice[]
+  stockLevels   StockLevel[]
+  stockMovements StockMovement[]
+}
+
+model Category {
+  id             String       @id
+  organizationId String
+  name           String       @db.Text
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, name])
+}
+
+model ProductPrice {
+  id                 String       @id
+  organizationId     String
+  productId          String
+  referenceCostMinor BigInt
+  salePriceMinor     BigInt
+  currency           String       @db.VarChar(3)
+  reference          String       @db.Text
+  actorId            String?
+  createdAt          DateTime     @default(now())
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  product            Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, productId, createdAt])
+}
+
+model Product {
+  id             String       @id
+  organizationId String
+  name           String       @db.Text
+  code           String?      @db.Text
+  barcode        String?      @db.Text
+  packaging      String?      @db.Text
+  form           String?      @db.Text
+  isActive       Boolean      @default(true)
+  trackInventory Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  prices         ProductPrice[]
+  stockLevels    StockLevel[]
+  stockMovements StockMovement[]
+
+  @@unique([organizationId, code])
+  @@unique([organizationId, barcode])
+  @@index([organizationId, name])
+}
+
+model UserAccount {
+  id        String                   @id
+  email     String                   @unique @db.Text
+  displayName String                  @db.Text
+  createdAt DateTime                 @default(now())
+  memberships OrganizationMembership[]
+}
+
+model OrganizationMembership {
+  id             String       @id
+  organizationId String
+  userAccountId  String
+  status         String       @db.VarChar(16)
+  role           String       @db.VarChar(16) @default("CASHIER")
+  invitedAt      DateTime     @default(now())
+  activatedAt    DateTime?
+  deactivatedAt  DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  userAccount    UserAccount  @relation(fields: [userAccountId], references: [id], onDelete: Restrict)
+  shopAssignments ShopAssignment[]
+
+  @@unique([organizationId, userAccountId])
+}
+
+model ShopAssignment {
+  id           String                 @id
+  membershipId String
+  shopId       String
+  membership   OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Restrict)
+  shop         Shop                   @relation(fields: [shopId], references: [id], onDelete: Restrict)
+
+  @@unique([membershipId, shopId])
+}
+
+model Shop {
+  id             String       @id
+  organizationId String
+  code           String       @db.Text
+  name           String       @db.Text
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  assignments    ShopAssignment[]
+  stockLevels    StockLevel[]
+  stockMovements StockMovement[]
+
+  @@unique([organizationId, code])
+}
+
+model StockLevel {
+  id             String       @id
+  organizationId String
+  shopId         String
+  productId      String
+  quantity       Decimal      @db.Decimal(18, 3)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  shop           Shop         @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, shopId, productId])
+}
+
+model StockMovement {
+  id             String       @id
+  organizationId String
+  shopId         String
+  productId      String
+  quantityDelta  Decimal      @db.Decimal(18, 3)
+  reason         String       @db.Text
+  actorId        String?
+  occurredAt     DateTime
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  shop           Shop         @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, shopId, productId, occurredAt])
+}
+
+model OrganizationAudit {
+  id             String       @id
+  organizationId String
+  actorId        String?
+  action         String       @db.Text
+  occurredAt     DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, occurredAt])
+}
