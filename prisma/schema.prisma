@@ -166,12 +166,16 @@ model SaleCart {
   organizationId String
   shopId         String
   status         String     @db.VarChar(16) @default("DRAFT")
+  finalizationReference String? @db.Text
+  finalizedByActorId String?
+  finalizedAt    DateTime?
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   shop           Shop       @relation(fields: [shopId], references: [id], onDelete: Restrict)
   lines          SaleLine[]
   @@index([organizationId, shopId, status])
+  @@unique([organizationId, finalizationReference])
 }
 
 model SaleLine {

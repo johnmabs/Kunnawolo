@@ -21,4 +21,15 @@ export class SaleCart {
   public static draft(id: Identifier, organizationId: Identifier, shopId: Identifier, lines: readonly SaleLine[] = []): SaleCart { return new SaleCart(id, organizationId, shopId, lines); }
   public addOrReplace(line: SaleLine): SaleCart { return new SaleCart(this.id, this.organizationId, this.shopId, [...this.lines.filter(({ id }) => !id.equals(line.id)), line]); }
   public remove(lineId: Identifier): SaleCart { return new SaleCart(this.id, this.organizationId, this.shopId, this.lines.filter(({ id }) => !id.equals(lineId))); }
+  public finalize(reference: string, actorId: string | null, finalizedAt: Date): SaleFinalization {
+    if (this.lines.length === 0) throw new DomainError("sales.empty_cart", "An empty cart cannot be finalized.");
+    const normalizedReference = reference.trim().normalize("NFC");
+    if (normalizedReference.length === 0) throw new DomainError("sales.invalid_finalization_reference", "A finalization reference must be non-empty.");
+    return SaleFinalization.create(this.id, this.organizationId, this.shopId, this.lines, normalizedReference, actorId, finalizedAt);
+  }
+}
+
+export class SaleFinalization {
+  private constructor(public readonly cartId: Identifier, public readonly organizationId: Identifier, public readonly shopId: Identifier, public readonly lines: readonly SaleLine[], public readonly reference: string, public readonly actorId: string | null, public readonly finalizedAt: Date) {}
+  public static create(cartId: Identifier, organizationId: Identifier, shopId: Identifier, lines: readonly SaleLine[], reference: string, actorId: string | null, finalizedAt: Date): SaleFinalization { return new SaleFinalization(cartId, organizationId, shopId, lines, reference.trim().normalize("NFC"), actorId, finalizedAt); }
 }
