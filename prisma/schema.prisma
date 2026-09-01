@@ -146,6 +146,7 @@ model StockMovement {
   quantityDelta  Decimal      @db.Decimal(18, 3)
   reason         String       @db.Text
   actorId        String?
+  idempotencyKey String?      @db.Text
   occurredAt     DateTime
   createdAt      DateTime     @default(now())
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
@@ -153,6 +154,7 @@ model StockMovement {
   product        Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
 
   @@index([organizationId, shopId, productId, occurredAt])
+  @@unique([organizationId, idempotencyKey])
 }
 
 model OrganizationAudit {
