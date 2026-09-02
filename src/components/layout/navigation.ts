@@ -28,6 +28,6 @@ export const navigation: readonly NavigationGroup[] = [
   },
   {
     label: "Configuration",
-    items: [{ href: "/administration/organization", icon: "admin", label: "Administration" }],
+    items: [{ enabled: true, href: "/administration/organization", icon: "admin", label: "Administration" }],
   },
 ];
