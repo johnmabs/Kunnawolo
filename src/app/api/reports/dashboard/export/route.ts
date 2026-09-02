@@ -11,6 +11,9 @@ import { ExportDashboardCsv } from "@/modules/reporting/application/export-dashb
 import { ViewDashboard } from "@/modules/reporting/application/view-dashboard";
 import { PrismaReportExportRepository } from "@/modules/reporting/infrastructure/prisma-report-export-repository";
 import { PrismaReportingReadAuthorization } from "@/modules/reporting/infrastructure/prisma-reporting-read-authorization";
+import { ObserveOperation } from "@/modules/observability/application/observe-operation";
+import { ConsoleOperationalLogger } from "@/modules/observability/infrastructure/console-operational-logger";
+import { PrismaOperationalObservabilityRepository } from "@/modules/observability/infrastructure/prisma-operational-observability-repository";
 import { authenticateReportRequest } from "../../report-api-access";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +28,8 @@ export async function POST(request: Request) {
   const databaseUrl = process.env.DATABASE_URL;
   if (databaseUrl === undefined) return NextResponse.json({ code: "reporting.unavailable" }, { status: 503 });
   const prisma = createPrismaClient(databaseUrl);
+  const startedAt = Date.now();
+  const correlationId = crypto.randomUUID();
   try {
     const exportDashboard = new ExportDashboardCsv(
       new ViewDashboard(
@@ -41,6 +46,7 @@ export async function POST(request: Request) {
     );
     const access = await authenticateReportRequest(prisma, request.headers.get("authorization"), input.organizationId);
     const reportExport = await exportDashboard.execute({ organizationId: input.organizationId, shopId: input.shopId, occurredFrom: toDate(input.occurredFrom), occurredTo: toDate(input.occurredTo), actorId: access.actorId, reference: input.reference });
+    await new ObserveOperation(new PrismaOperationalObservabilityRepository(prisma), new ConsoleOperationalLogger(), new SystemClock()).execute({ organizationId: input.organizationId, shopId: input.shopId, actorId: access.actorId, action: "report.dashboard_exported", reference: reportExport.reference, correlationId, durationMillis: Date.now() - startedAt, metadata: { format: "CSV" } });
     return new NextResponse(reportExport.content, { status: 201, headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${reportExport.reference}.csv"` } });
   } catch (error) {
     const code = error instanceof Error && "code" in error ? String(error.code) : "reporting.export_failed";

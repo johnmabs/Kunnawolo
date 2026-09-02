@@ -13,6 +13,6 @@ Dernière mise à jour: 2026-09-02
 | 6 | DONE | 6.4 — Rapprochement (DONE) |
 | 7 | DONE | 7.4 — Consultation et droits (DONE) |
 | 8 | DONE | 8.4 — Dashboards et exports (DONE — 2026-09-02 : `pnpm lint`, `pnpm typecheck`, `pnpm test -- --maxWorkers=1`, `pnpm build` et `pnpm db:migrate:status` réussis.) |
-| 9 | IN_PROGRESS | 9.1 — Sécurité et isolation (DONE — 2026-09-02 : `pnpm lint`, `pnpm typecheck`, `pnpm test -- --maxWorkers=1`, `pnpm build` et `pnpm db:migrate:status` réussis.) |
+| 9 | IN_PROGRESS | 9.2 — Audit et observabilité (DONE — 2026-09-02 : `pnpm lint`, `pnpm typecheck`, `pnpm test -- --maxWorkers=1`, `pnpm build` et `pnpm db:migrate:status` réussis.) |
 
 Statuts: PLANNED, READY, IN_PROGRESS, BLOCKED, DONE. Un statut DONE exige une preuve vérifiable.

@@ -35,6 +35,8 @@ model Organization {
   expenseCancellations ExpenseCancellation[]
   reportExports ReportExport[]
   apiAccessKeys ApiAccessKey[]
+  operationalMetrics OperationalMetric[]
+  operationalAlerts OperationalAlert[]
 }
 
 model Category {
@@ -219,6 +221,9 @@ model Shop {
   transfersFrom  StockTransfer[] @relation("TransferSourceShop")
   transfersTo    StockTransfer[] @relation("TransferDestinationShop")
   reportExports  ReportExport[]
+  auditEvents    OrganizationAudit[]
+  operationalMetrics OperationalMetric[]
+  operationalAlerts OperationalAlert[]
 
   @@unique([organizationId, code])
 }
@@ -517,8 +522,50 @@ model OrganizationAudit {
   organizationId String
   actorId        String?
   action         String       @db.Text
+  reference      String?
+  correlationId  String?
+  shopId         String?
+  metadata       Json?
   occurredAt     DateTime     @default(now())
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  shop           Shop?        @relation(fields: [shopId], references: [id], onDelete: Restrict)
 
   @@index([organizationId, occurredAt])
+  @@index([organizationId, shopId, occurredAt])
+  @@index([organizationId, reference])
+  @@unique([organizationId, correlationId])
+}
+
+model OperationalMetric {
+  id             String       @id
+  organizationId String
+  shopId         String?
+  name           String       @db.VarChar(64)
+  value          BigInt
+  correlationId  String       @db.Text
+  observedAt     DateTime
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  shop           Shop?        @relation(fields: [shopId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, name, observedAt])
+  @@index([organizationId, shopId, observedAt])
+}
+
+model OperationalAlert {
+  id             String       @id
+  organizationId String
+  shopId         String?
+  code           String       @db.VarChar(64)
+  severity       String       @db.VarChar(16)
+  reference      String       @db.Text
+  correlationId  String       @db.Text
+  details        Json?
+  occurredAt     DateTime
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  shop           Shop?        @relation(fields: [shopId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, code, reference])
+  @@index([organizationId, shopId, occurredAt])
 }
