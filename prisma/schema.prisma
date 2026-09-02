@@ -30,6 +30,7 @@ model Organization {
   inventorySessions InventorySession[]
   inventoryAdjustments InventoryAdjustment[]
   inventoryReconciliations InventoryReconciliation[]
+  expenseCategories ExpenseCategory[]
 }
 
 model Category {
@@ -42,6 +43,19 @@ model Category {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
 
   @@unique([organizationId, name])
+}
+
+model ExpenseCategory {
+  id             String       @id
+  organizationId String
+  name           String       @db.Text
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, name])
+  @@index([organizationId, isActive])
 }
 
 model ProductPrice {
