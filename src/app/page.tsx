@@ -1,3 +1,3 @@
-import { OperationalConsole } from "./operational-console";
+import { DashboardWorkspace } from "./_components/dashboard-workspace";
 
-export default function Home() { return <OperationalConsole />; }
+export default function Home() { return <DashboardWorkspace />; }
