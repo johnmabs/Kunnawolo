@@ -16,6 +16,7 @@ model Organization {
   audits    OrganizationAudit[]
   shops     Shop[]
   memberships OrganizationMembership[]
+  membershipInvitations MembershipInvitation[]
   categories Category[]
   products   Product[]
   productPrices ProductPrice[]
@@ -159,6 +160,32 @@ model UserAccount {
   apiAccessKeys ApiAccessKey[]
   workspacePreferences WorkspacePreference[]
   workspaceIdempotencyRecords WorkspaceIdempotencyRecord[]
+  passwordCredential PasswordCredential?
+  webSessions WebSession[]
+  invitationsSent MembershipInvitation[] @relation("InvitationSender")
+}
+
+model PasswordCredential {
+  userAccountId String   @id
+  algorithm     String   @db.VarChar(32)
+  salt          String   @db.Text
+  hash          String   @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userAccount   UserAccount @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
+}
+
+model WebSession {
+  id            String   @id
+  userAccountId String
+  tokenHash     String   @unique @db.VarChar(64)
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  lastSeenAt    DateTime
+  createdAt     DateTime @default(now())
+  userAccount   UserAccount @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
+
+  @@index([userAccountId, expiresAt])
 }
 
 model ApiAccessKey {
@@ -235,8 +262,27 @@ model OrganizationMembership {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   userAccount    UserAccount  @relation(fields: [userAccountId], references: [id], onDelete: Restrict)
   shopAssignments ShopAssignment[]
+  invitation MembershipInvitation?
 
   @@unique([organizationId, userAccountId])
+}
+
+model MembershipInvitation {
+  id               String   @id
+  organizationId   String
+  membershipId     String   @unique
+  invitedByActorId String
+  email             String   @db.Text
+  tokenHash         String   @unique @db.VarChar(64)
+  expiresAt         DateTime
+  acceptedAt        DateTime?
+  createdAt         DateTime @default(now())
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  membership        OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  invitedBy         UserAccount @relation("InvitationSender", fields: [invitedByActorId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, email])
+  @@index([expiresAt])
 }
 
 model ShopAssignment {
