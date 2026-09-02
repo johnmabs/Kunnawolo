@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Kunnawolo",
+  title: "Kunnawolo Basibon",
   description: "Gestionnaire de ventes et de stocks.",
 };
 
