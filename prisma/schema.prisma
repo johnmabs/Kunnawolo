@@ -29,6 +29,7 @@ model Organization {
   stockLosses    StockLoss[]
   inventorySessions InventorySession[]
   inventoryAdjustments InventoryAdjustment[]
+  inventoryReconciliations InventoryReconciliation[]
 }
 
 model Category {
@@ -80,6 +81,7 @@ model Product {
   stockLosses    StockLoss[]
   inventoryLines InventorySessionLine[]
   inventoryAdjustmentLines InventoryAdjustmentLine[]
+  inventoryReconciliationLines InventoryReconciliationLine[]
 
   @@unique([organizationId, code])
   @@unique([organizationId, barcode])
@@ -136,6 +138,7 @@ model Shop {
   stockLosses    StockLoss[]
   inventorySessions InventorySession[]
   inventoryAdjustments InventoryAdjustment[]
+  inventoryReconciliations InventoryReconciliation[]
   transfersFrom  StockTransfer[] @relation("TransferSourceShop")
   transfersTo    StockTransfer[] @relation("TransferDestinationShop")
 
@@ -203,6 +206,37 @@ model InventoryAdjustmentLine {
   @@unique([inventoryAdjustmentId, productId])
 }
 
+model InventoryReconciliation {
+  id             String   @id
+  organizationId String
+  shopId         String
+  reference      String   @db.Text
+  actorId        String?
+  reconciledAt   DateTime
+  createdAt      DateTime @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  shop           Shop     @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  lines          InventoryReconciliationLine[]
+
+  @@unique([organizationId, reference])
+  @@index([organizationId, shopId, reconciledAt])
+}
+
+model InventoryReconciliationLine {
+  id                      String   @id
+  inventoryReconciliationId String
+  productId               String
+  stockLevelId            String
+  stockLevelQuantity      Decimal  @db.Decimal(18, 3)
+  ledgerQuantity          Decimal  @db.Decimal(18, 3)
+  quantityDifference      Decimal  @db.Decimal(18, 3)
+  inventoryReconciliation InventoryReconciliation @relation(fields: [inventoryReconciliationId], references: [id], onDelete: Restrict)
+  product                 Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  stockLevel              StockLevel @relation(fields: [stockLevelId], references: [id], onDelete: Restrict)
+
+  @@unique([inventoryReconciliationId, productId])
+}
+
 model StockLoss {
   id             String   @id
   organizationId String
@@ -234,6 +268,7 @@ model StockLevel {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   shop           Shop         @relation(fields: [shopId], references: [id], onDelete: Restrict)
   product        Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  inventoryReconciliationLines InventoryReconciliationLine[]
 
   @@unique([organizationId, shopId, productId])
 }

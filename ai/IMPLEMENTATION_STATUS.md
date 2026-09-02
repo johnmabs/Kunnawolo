@@ -10,7 +10,7 @@ Dernière mise à jour: 2026-09-02
 | 3 | DONE | — |
 | 4 | IN_PROGRESS | — |
 | 5 | DONE | — |
-| 6 | IN_PROGRESS | 6.3 — Ajustements (DONE) |
+| 6 | DONE | 6.4 — Rapprochement (DONE) |
 | 7 | PLANNED | — |
 | 8 | PLANNED | — |
 | 9 | PLANNED | — |

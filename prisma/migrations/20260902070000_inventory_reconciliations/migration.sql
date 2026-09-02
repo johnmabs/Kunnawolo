@@ -1,0 +1,10 @@
+CREATE TABLE "InventoryReconciliation" ("id" TEXT NOT NULL, "organizationId" TEXT NOT NULL, "shopId" TEXT NOT NULL, "reference" TEXT NOT NULL, "actorId" TEXT, "reconciledAt" TIMESTAMP(3) NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "InventoryReconciliation_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "InventoryReconciliationLine" ("id" TEXT NOT NULL, "inventoryReconciliationId" TEXT NOT NULL, "productId" TEXT NOT NULL, "stockLevelId" TEXT NOT NULL, "stockLevelQuantity" DECIMAL(18,3) NOT NULL, "ledgerQuantity" DECIMAL(18,3) NOT NULL, "quantityDifference" DECIMAL(18,3) NOT NULL, CONSTRAINT "InventoryReconciliationLine_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "InventoryReconciliation_organizationId_reference_key" ON "InventoryReconciliation"("organizationId", "reference");
+CREATE INDEX "InventoryReconciliation_organizationId_shopId_reconciledAt_idx" ON "InventoryReconciliation"("organizationId", "shopId", "reconciledAt");
+CREATE UNIQUE INDEX "InventoryReconciliationLine_inventoryReconciliationId_productId_key" ON "InventoryReconciliationLine"("inventoryReconciliationId", "productId");
+ALTER TABLE "InventoryReconciliation" ADD CONSTRAINT "InventoryReconciliation_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InventoryReconciliation" ADD CONSTRAINT "InventoryReconciliation_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InventoryReconciliationLine" ADD CONSTRAINT "InventoryReconciliationLine_inventoryReconciliationId_fkey" FOREIGN KEY ("inventoryReconciliationId") REFERENCES "InventoryReconciliation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InventoryReconciliationLine" ADD CONSTRAINT "InventoryReconciliationLine_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InventoryReconciliationLine" ADD CONSTRAINT "InventoryReconciliationLine_stockLevelId_fkey" FOREIGN KEY ("stockLevelId") REFERENCES "StockLevel"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
