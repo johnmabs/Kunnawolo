@@ -1,0 +1,2 @@
+import type { InventorySession } from "../../domain/inventory-session";
+export interface InventorySessionRepository { open(session: InventorySession, actorId: string | null, openedAt: Date): Promise<void>; count(organizationId: string, sessionId: string, productId: string, quantity: number, actorId: string | null): Promise<void>; close(organizationId: string, sessionId: string, actorId: string | null, closedAt: Date): Promise<void>; }

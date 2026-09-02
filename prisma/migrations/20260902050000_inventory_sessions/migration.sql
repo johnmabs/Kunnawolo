@@ -1,0 +1,8 @@
+CREATE TABLE "InventorySession" ("id" TEXT NOT NULL, "organizationId" TEXT NOT NULL, "shopId" TEXT NOT NULL, "status" VARCHAR(16) NOT NULL DEFAULT 'OPEN', "openedByActorId" TEXT, "openedAt" TIMESTAMP(3) NOT NULL, "closedByActorId" TEXT, "closedAt" TIMESTAMP(3), "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "InventorySession_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "InventorySessionLine" ("id" TEXT NOT NULL, "inventorySessionId" TEXT NOT NULL, "productId" TEXT NOT NULL, "expectedQuantity" DECIMAL(18,3) NOT NULL, "countedQuantity" DECIMAL(18,3), CONSTRAINT "InventorySessionLine_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "InventorySession_organizationId_shopId_status_idx" ON "InventorySession"("organizationId", "shopId", "status");
+CREATE UNIQUE INDEX "InventorySessionLine_inventorySessionId_productId_key" ON "InventorySessionLine"("inventorySessionId", "productId");
+ALTER TABLE "InventorySession" ADD CONSTRAINT "InventorySession_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InventorySession" ADD CONSTRAINT "InventorySession_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InventorySessionLine" ADD CONSTRAINT "InventorySessionLine_inventorySessionId_fkey" FOREIGN KEY ("inventorySessionId") REFERENCES "InventorySession"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InventorySessionLine" ADD CONSTRAINT "InventorySessionLine_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
