@@ -3,7 +3,7 @@ import { createPrismaClient } from "@/infrastructure/prisma/prisma-client";
 import { ListOperationalAlerts } from "@/modules/observability/application/list-operational-alerts";
 import { PrismaOperationalAlertReadAuthorization } from "@/modules/observability/infrastructure/prisma-operational-alert-read-authorization";
 import { PrismaOperationalAlertRepository } from "@/modules/observability/infrastructure/prisma-operational-alert-repository";
-import { authenticateReportRequest } from "../reports/report-api-access";
+import { authenticateApiRequest } from "../_shared/api-access";
 
 export async function GET(request: Request) {
   const search = new URL(request.url).searchParams;
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   if (databaseUrl === undefined) return NextResponse.json({ code: "observability.unavailable" }, { status: 503 });
   const prisma = createPrismaClient(databaseUrl);
   try {
-    const access = await authenticateReportRequest(prisma, request.headers.get("authorization"), organizationId);
+    const access = await authenticateApiRequest(prisma, request.headers.get("authorization"), organizationId);
     const limit = search.get("limit");
     const page = await new ListOperationalAlerts(new PrismaOperationalAlertRepository(prisma), new PrismaOperationalAlertReadAuthorization(prisma)).execute({ organizationId, actorId: access.actorId, shopId: search.get("shopId"), limit: limit === null ? null : Number(limit), cursor: search.get("cursor") });
     return NextResponse.json(page);

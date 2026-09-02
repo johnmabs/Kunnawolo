@@ -11,7 +11,7 @@ import { ObserveOperation } from "@/modules/observability/application/observe-op
 import { ConsoleOperationalLogger } from "@/modules/observability/infrastructure/console-operational-logger";
 import { PrismaOperationalObservabilityRepository } from "@/modules/observability/infrastructure/prisma-operational-observability-repository";
 import { SystemClock } from "@/shared/infrastructure/system-clock";
-import { authenticateReportRequest } from "../report-api-access";
+import { authenticateApiRequest } from "../../_shared/api-access";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   const startedAt = Date.now();
   const correlationId = crypto.randomUUID();
   try {
-    const access = await authenticateReportRequest(prisma, request.headers.get("authorization"), organizationId);
+    const access = await authenticateApiRequest(prisma, request.headers.get("authorization"), organizationId);
     const dashboard = await new ViewDashboard(
       new PrismaSalesReportingSource(prisma),
       new PrismaInventoryReportingSource(prisma),
