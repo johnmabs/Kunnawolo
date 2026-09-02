@@ -1,0 +1,13 @@
+CREATE TABLE "InventoryAdjustment" ("id" TEXT NOT NULL, "organizationId" TEXT NOT NULL, "inventorySessionId" TEXT NOT NULL, "shopId" TEXT NOT NULL, "reference" TEXT NOT NULL, "actorId" TEXT, "adjustedAt" TIMESTAMP(3) NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "InventoryAdjustment_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "InventoryAdjustmentLine" ("id" TEXT NOT NULL, "inventoryAdjustmentId" TEXT NOT NULL, "productId" TEXT NOT NULL, "expectedQuantity" DECIMAL(18,3) NOT NULL, "countedQuantity" DECIMAL(18,3) NOT NULL, "quantityDelta" DECIMAL(18,3) NOT NULL, "stockMovementId" TEXT NOT NULL, CONSTRAINT "InventoryAdjustmentLine_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "InventoryAdjustment_inventorySessionId_key" ON "InventoryAdjustment"("inventorySessionId");
+CREATE UNIQUE INDEX "InventoryAdjustment_organizationId_reference_key" ON "InventoryAdjustment"("organizationId", "reference");
+CREATE INDEX "InventoryAdjustment_organizationId_shopId_adjustedAt_idx" ON "InventoryAdjustment"("organizationId", "shopId", "adjustedAt");
+CREATE UNIQUE INDEX "InventoryAdjustmentLine_stockMovementId_key" ON "InventoryAdjustmentLine"("stockMovementId");
+CREATE UNIQUE INDEX "InventoryAdjustmentLine_inventoryAdjustmentId_productId_key" ON "InventoryAdjustmentLine"("inventoryAdjustmentId", "productId");
+ALTER TABLE "InventoryAdjustment" ADD CONSTRAINT "InventoryAdjustment_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InventoryAdjustment" ADD CONSTRAINT "InventoryAdjustment_inventorySessionId_fkey" FOREIGN KEY ("inventorySessionId") REFERENCES "InventorySession"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InventoryAdjustment" ADD CONSTRAINT "InventoryAdjustment_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InventoryAdjustmentLine" ADD CONSTRAINT "InventoryAdjustmentLine_inventoryAdjustmentId_fkey" FOREIGN KEY ("inventoryAdjustmentId") REFERENCES "InventoryAdjustment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InventoryAdjustmentLine" ADD CONSTRAINT "InventoryAdjustmentLine_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InventoryAdjustmentLine" ADD CONSTRAINT "InventoryAdjustmentLine_stockMovementId_fkey" FOREIGN KEY ("stockMovementId") REFERENCES "StockMovement"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

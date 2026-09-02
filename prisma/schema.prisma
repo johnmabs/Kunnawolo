@@ -28,6 +28,7 @@ model Organization {
   stockTransfers StockTransfer[]
   stockLosses    StockLoss[]
   inventorySessions InventorySession[]
+  inventoryAdjustments InventoryAdjustment[]
 }
 
 model Category {
@@ -78,6 +79,7 @@ model Product {
   transferLines  StockTransferLine[]
   stockLosses    StockLoss[]
   inventoryLines InventorySessionLine[]
+  inventoryAdjustmentLines InventoryAdjustmentLine[]
 
   @@unique([organizationId, code])
   @@unique([organizationId, barcode])
@@ -133,6 +135,7 @@ model Shop {
   saleCarts      SaleCart[]
   stockLosses    StockLoss[]
   inventorySessions InventorySession[]
+  inventoryAdjustments InventoryAdjustment[]
   transfersFrom  StockTransfer[] @relation("TransferSourceShop")
   transfersTo    StockTransfer[] @relation("TransferDestinationShop")
 
@@ -152,6 +155,7 @@ model InventorySession {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   shop           Shop     @relation(fields: [shopId], references: [id], onDelete: Restrict)
   lines          InventorySessionLine[]
+  adjustment     InventoryAdjustment?
   @@index([organizationId, shopId, status])
 }
 
@@ -164,6 +168,39 @@ model InventorySessionLine {
   inventorySession   InventorySession @relation(fields: [inventorySessionId], references: [id], onDelete: Restrict)
   product            Product @relation(fields: [productId], references: [id], onDelete: Restrict)
   @@unique([inventorySessionId, productId])
+}
+
+model InventoryAdjustment {
+  id                 String   @id
+  organizationId     String
+  inventorySessionId String   @unique
+  shopId             String
+  reference          String   @db.Text
+  actorId            String?
+  adjustedAt         DateTime
+  createdAt          DateTime @default(now())
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  inventorySession   InventorySession @relation(fields: [inventorySessionId], references: [id], onDelete: Restrict)
+  shop               Shop     @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  lines              InventoryAdjustmentLine[]
+
+  @@unique([organizationId, reference])
+  @@index([organizationId, shopId, adjustedAt])
+}
+
+model InventoryAdjustmentLine {
+  id                    String   @id
+  inventoryAdjustmentId String
+  productId             String
+  expectedQuantity      Decimal  @db.Decimal(18, 3)
+  countedQuantity       Decimal  @db.Decimal(18, 3)
+  quantityDelta         Decimal  @db.Decimal(18, 3)
+  stockMovementId       String   @unique
+  inventoryAdjustment   InventoryAdjustment @relation(fields: [inventoryAdjustmentId], references: [id], onDelete: Restrict)
+  product               Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  stockMovement         StockMovement @relation(fields: [stockMovementId], references: [id], onDelete: Restrict)
+
+  @@unique([inventoryAdjustmentId, productId])
 }
 
 model StockLoss {
@@ -215,6 +252,7 @@ model StockMovement {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   shop           Shop         @relation(fields: [shopId], references: [id], onDelete: Restrict)
   product        Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  inventoryAdjustmentLine InventoryAdjustmentLine?
 
   @@index([organizationId, shopId, productId, occurredAt])
   @@unique([organizationId, idempotencyKey])

@@ -1,6 +1,6 @@
 # Statut d implémentation
 
-Dernière mise à jour: 2026-09-01
+Dernière mise à jour: 2026-09-02
 
 | Lot | Statut | Epic active |
 |---:|---|---|
@@ -10,7 +10,7 @@ Dernière mise à jour: 2026-09-01
 | 3 | DONE | — |
 | 4 | IN_PROGRESS | — |
 | 5 | DONE | — |
-| 6 | IN_PROGRESS | — |
+| 6 | IN_PROGRESS | 6.3 — Ajustements (DONE) |
 | 7 | PLANNED | — |
 | 8 | PLANNED | — |
 | 9 | PLANNED | — |
