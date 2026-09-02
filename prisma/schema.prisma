@@ -32,6 +32,7 @@ model Organization {
   inventoryReconciliations InventoryReconciliation[]
   expenseCategories ExpenseCategory[]
   expenses Expense[]
+  expenseCancellations ExpenseCancellation[]
 }
 
 model Category {
@@ -75,10 +76,27 @@ model Expense {
   organization      Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   expenseCategory   ExpenseCategory @relation(fields: [expenseCategoryId], references: [id], onDelete: Restrict)
   shop              Shop?           @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  cancellation      ExpenseCancellation?
 
   @@unique([organizationId, reference])
   @@index([organizationId, shopId, occurredAt])
   @@index([organizationId, expenseCategoryId, occurredAt])
+}
+
+model ExpenseCancellation {
+  id                    String   @id
+  organizationId        String
+  expenseId             String   @unique
+  cancellationReference String   @db.Text
+  reason                String   @db.Text
+  actorId               String?
+  cancelledAt           DateTime
+  createdAt             DateTime @default(now())
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  expense               Expense @relation(fields: [expenseId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, cancellationReference])
+  @@index([organizationId, cancelledAt])
 }
 
 model ProductPrice {
