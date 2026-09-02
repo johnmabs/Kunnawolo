@@ -79,6 +79,7 @@ model Expense {
   cancellation      ExpenseCancellation?
 
   @@unique([organizationId, reference])
+  @@index([organizationId, occurredAt])
   @@index([organizationId, shopId, occurredAt])
   @@index([organizationId, expenseCategoryId, occurredAt])
 }
