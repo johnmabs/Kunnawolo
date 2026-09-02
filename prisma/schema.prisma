@@ -25,6 +25,7 @@ model Organization {
   salePayments   SalePayment[]
   saleCancellations SaleCancellation[]
   salesSequence  SalesSequence?
+  stockTransfers StockTransfer[]
 }
 
 model Category {
@@ -72,6 +73,7 @@ model Product {
   stockLevels    StockLevel[]
   saleLines      SaleLine[]
   stockMovements StockMovement[]
+  transferLines  StockTransferLine[]
 
   @@unique([organizationId, code])
   @@unique([organizationId, barcode])
@@ -125,6 +127,8 @@ model Shop {
   stockLevels    StockLevel[]
   stockMovements StockMovement[]
   saleCarts      SaleCart[]
+  transfersFrom  StockTransfer[] @relation("TransferSourceShop")
+  transfersTo    StockTransfer[] @relation("TransferDestinationShop")
 
   @@unique([organizationId, code])
 }
@@ -162,6 +166,36 @@ model StockMovement {
 
   @@index([organizationId, shopId, productId, occurredAt])
   @@unique([organizationId, idempotencyKey])
+}
+
+model StockTransfer {
+  id                String   @id
+  organizationId    String
+  sourceShopId      String
+  destinationShopId String
+  status            String   @db.VarChar(16) @default("DRAFT")
+  createdByActorId  String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  sourceShop        Shop     @relation("TransferSourceShop", fields: [sourceShopId], references: [id], onDelete: Restrict)
+  destinationShop   Shop     @relation("TransferDestinationShop", fields: [destinationShopId], references: [id], onDelete: Restrict)
+  lines             StockTransferLine[]
+
+  @@index([organizationId, sourceShopId, status])
+  @@index([organizationId, destinationShopId, status])
+}
+
+model StockTransferLine {
+  id              String   @id
+  stockTransferId String
+  productId       String
+  quantity        Decimal  @db.Decimal(18, 3)
+  stockTransfer   StockTransfer @relation(fields: [stockTransferId], references: [id], onDelete: Restrict)
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([stockTransferId, productId])
+  @@index([productId])
 }
 
 model SaleCart {
