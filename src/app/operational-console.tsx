@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { AppShell, PageContainer } from "@/components/layout";
+import { PageContainer, useWorkspace } from "@/components/layout";
 import { Button, Card, CardContent, CardHeader, CardTitle, Field, Input, KpiCard, PageHeader, Switch } from "@/components/ui";
 import { formatMoney } from "@/lib/format-money";
 
@@ -20,11 +20,8 @@ type Dashboard = Readonly<{
 type ApiError = Readonly<{ code?: string }>;
 
 export function OperationalConsole() {
-  const [organizationId, setOrganizationId] = useState("");
-  const [workspaceShopId, setWorkspaceShopId] = useState("");
+  const { apiKey, compact, organizationId, setApiKey, setCompact, setOrganizationId, setWorkspaceShopId, workspaceShopId } = useWorkspace();
   const [dashboardShopId, setDashboardShopId] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [compact, setCompact] = useState(false);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [message, setMessage] = useState("Renseignez votre accès pour consulter les indicateurs.");
   const [busy, setBusy] = useState(false);
@@ -77,12 +74,7 @@ export function OperationalConsole() {
   }
 
   return (
-    <AppShell
-      organizationLabel={organizationId.trim() ? `ID : ${organizationId.trim()}` : "Non sélectionnée"}
-      shopLabel={workspaceShopId.trim() ? `ID : ${workspaceShopId.trim()}` : "Boutique non définie"}
-      userLabel="Identité indisponible"
-    >
-      <PageContainer className={compact ? "lg:p-6" : undefined}>
+    <PageContainer className={compact ? "lg:p-6" : undefined}>
         <PageHeader description="Consultez les principaux indicateurs commerciaux dans le périmètre analytique choisi." title="Tableau de bord" />
 
         <Card className="mt-6">
@@ -130,8 +122,7 @@ export function OperationalConsole() {
           <KpiCard label="Anomalies" value={formatMetric(dashboard?.stock?.anomalyCount)} />
           <KpiCard label="Résultat estimé" value={formatMetric(dashboard?.estimatedResult?.amount?.amountMinor, currency)} />
         </section>
-      </PageContainer>
-    </AppShell>
+    </PageContainer>
   );
 }
 

@@ -4,23 +4,23 @@ import { useState, type ReactNode } from "react";
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle, ToastProvider } from "@/components/ui";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
+import { useWorkspace, WorkspaceProvider } from "./workspace-context";
 
-type AppShellProps = Readonly<{
-  children: ReactNode;
-  organizationLabel: string;
-  shopLabel: string;
-  userLabel: string;
-}>;
-
-export function AppShell({ children, organizationLabel, shopLabel, userLabel }: AppShellProps) {
+function AppShellContent({ children }: Readonly<{ children: ReactNode }>) {
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const { organizationId, workspaceShopId } = useWorkspace();
 
   return (
     <ToastProvider>
       <div className="min-h-dvh bg-background md:grid md:grid-cols-[4.5rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)]">
         <div className="sticky top-0 hidden h-dvh md:block"><Sidebar /></div>
         <div className="min-w-0">
-          <Topbar onMenuOpen={() => setMobileNavigationOpen(true)} organizationLabel={organizationLabel} shopLabel={shopLabel} userLabel={userLabel} />
+          <Topbar
+            onMenuOpen={() => setMobileNavigationOpen(true)}
+            organizationLabel={organizationId.trim() ? `ID : ${organizationId.trim()}` : "Non sélectionnée"}
+            shopLabel={workspaceShopId.trim() ? `ID : ${workspaceShopId.trim()}` : "Boutique non définie"}
+            userLabel="Identité indisponible"
+          />
           <main>{children}</main>
         </div>
       </div>
@@ -32,5 +32,13 @@ export function AppShell({ children, organizationLabel, shopLabel, userLabel }: 
         </DrawerContent>
       </Drawer>
     </ToastProvider>
+  );
+}
+
+export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
+  return (
+    <WorkspaceProvider>
+      <AppShellContent>{children}</AppShellContent>
+    </WorkspaceProvider>
   );
 }
