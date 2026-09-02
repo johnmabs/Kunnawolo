@@ -376,6 +376,7 @@ model StockTransfer {
 
   @@index([organizationId, sourceShopId, status])
   @@index([organizationId, destinationShopId, status])
+  @@index([organizationId, status])
   @@unique([organizationId, shipmentReference])
   @@unique([organizationId, receptionReference])
   @@unique([organizationId, cancellationReference])

@@ -12,7 +12,7 @@ Dernière mise à jour: 2026-09-02
 | 5 | DONE | — |
 | 6 | DONE | 6.4 — Rapprochement (DONE) |
 | 7 | DONE | 7.4 — Consultation et droits (DONE) |
-| 8 | IN_PROGRESS | 8.1 — Projections ventes (DONE) |
+| 8 | IN_PROGRESS | 8.2 — Projections stock (DONE) |
 | 9 | PLANNED | — |
 
 Statuts: PLANNED, READY, IN_PROGRESS, BLOCKED, DONE. Un statut DONE exige une preuve vérifiable.
