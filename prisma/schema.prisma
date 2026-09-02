@@ -411,6 +411,7 @@ model SaleCart {
   payment        SalePayment?
   cancellation   SaleCancellation?
   @@index([organizationId, shopId, status])
+  @@index([organizationId, finalizedAt, status])
   @@unique([organizationId, finalizationReference])
   @@unique([organizationId, businessReference])
 }
