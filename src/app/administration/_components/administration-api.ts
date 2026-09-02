@@ -1,0 +1,6 @@
+export type AdministrationAccess = Readonly<{ apiKey: string; organizationId: string }>;
+export type OrganizationProfile = Readonly<{ id: string; name: string; currency: string }>;
+export type IssuedKey = Readonly<{ id: string; label: string; expiresAt: string | null; token: string }>;
+async function request<T>(url: string, access: AdministrationAccess, init?: RequestInit): Promise<T> { const response = await fetch(url, { ...init, headers: { Authorization: `Bearer ${access.apiKey}`, ...(init?.body ? { "Content-Type": "application/json" } : {}), ...init?.headers }, cache: "no-store" }); const body = await response.json() as T & Readonly<{ code?: string }>; if (!response.ok) throw new Error(body.code ?? "administration.unknown_error"); return body; }
+export function getOrganization(access: AdministrationAccess): Promise<OrganizationProfile> { return request(`/api/administration/organization?organizationId=${encodeURIComponent(access.organizationId)}`, access); }
+export function issueApiKey(access: AdministrationAccess, label: string, expiresAt: string): Promise<IssuedKey> { return request("/api/administration/api-keys", access, { method: "POST", body: JSON.stringify({ organizationId: access.organizationId, label, expiresAt: expiresAt || null }) }); }
