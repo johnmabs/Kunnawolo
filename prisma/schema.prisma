@@ -37,6 +37,7 @@ model Organization {
   apiAccessKeys ApiAccessKey[]
   operationalMetrics OperationalMetric[]
   operationalAlerts OperationalAlert[]
+  workspacePreferences WorkspacePreference[]
 }
 
 model Category {
@@ -155,6 +156,7 @@ model UserAccount {
   createdAt DateTime                 @default(now())
   memberships OrganizationMembership[]
   apiAccessKeys ApiAccessKey[]
+  workspacePreferences WorkspacePreference[]
 }
 
 model ApiAccessKey {
@@ -172,6 +174,22 @@ model ApiAccessKey {
 
   @@unique([organizationId, label])
   @@index([organizationId, actorId])
+}
+
+model WorkspacePreference {
+  id             String       @id
+  organizationId String
+  actorId        String
+  shopId         String?
+  isCompact      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor          UserAccount  @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  shop           Shop?        @relation(fields: [shopId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, actorId])
+  @@index([organizationId, shopId])
 }
 
 model OrganizationMembership {
@@ -224,6 +242,7 @@ model Shop {
   auditEvents    OrganizationAudit[]
   operationalMetrics OperationalMetric[]
   operationalAlerts OperationalAlert[]
+  workspacePreferences WorkspacePreference[]
 
   @@unique([organizationId, code])
 }
