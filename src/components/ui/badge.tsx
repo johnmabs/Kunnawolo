@@ -7,7 +7,7 @@ const variants: Record<BadgeVariant, string> = {
   neutral: "bg-surface-subtle text-text-secondary ring-border",
   info: "bg-info/10 text-info ring-info/20",
   success: "bg-success/10 text-success ring-success/20",
-  warning: "bg-warning/10 text-warning ring-warning/20",
+  warning: "bg-warning/10 text-warning-foreground ring-warning/30",
   danger: "bg-danger/10 text-danger ring-danger/20",
 };
 

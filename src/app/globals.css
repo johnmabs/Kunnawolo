@@ -11,6 +11,7 @@
   --color-primary-hover: var(--primary-hover);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-danger: var(--danger);
   --color-info: var(--info);
   --color-border: var(--border);
@@ -31,6 +32,7 @@
   --primary-hover: #084fad;
   --success: #16865c;
   --warning: #d97706;
+  --warning-foreground: #92400e;
   --danger: #d92d20;
   --info: #2563eb;
   --border: #e2e8f0;
@@ -66,4 +68,28 @@ textarea {
 
 ::selection {
   background: color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+@media (min-width: 768px) {
+  [data-compact="true"] [data-page-container] {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+
+  [data-compact="true"] table th,
+  [data-compact="true"] table td {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

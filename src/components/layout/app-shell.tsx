@@ -8,11 +8,11 @@ import { useWorkspace, WorkspaceProvider } from "./workspace-context";
 
 function AppShellContent({ children }: Readonly<{ children: ReactNode }>) {
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
-  const { organizationId, workspaceShopId } = useWorkspace();
+  const { compact, organizationId, workspaceShopId } = useWorkspace();
 
   return (
     <ToastProvider>
-      <div className="min-h-dvh bg-background md:grid md:grid-cols-[4.5rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)]">
+      <div className="min-h-dvh bg-background md:grid md:grid-cols-[4.5rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)]" data-compact={compact}>
         <div className="sticky top-0 hidden h-dvh md:block"><Sidebar /></div>
         <div className="min-w-0">
           <Topbar
