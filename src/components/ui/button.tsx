@@ -30,23 +30,28 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   { asChild = false, children, className, disabled, isLoading = false, size = "md", type = "button", variant = "primary", ...props },
   ref,
 ) {
-  const Component = asChild ? Slot.Root : "button";
+  const styles = cn(
+    "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border font-semibold transition-colors focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary/40 disabled:pointer-events-none disabled:opacity-50",
+    variants[variant],
+    sizes[size],
+    className,
+  );
+
+  if (asChild) {
+    return <Slot.Root className={styles} ref={ref} {...props}>{children}</Slot.Root>;
+  }
 
   return (
-    <Component
-      className={cn(
-        "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border font-semibold transition-colors focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary/40 disabled:pointer-events-none disabled:opacity-50",
-        variants[variant],
-        sizes[size],
-        className,
-      )}
-      {...(!asChild ? { disabled: disabled || isLoading, type } : {})}
+    <button
+      className={styles}
+      disabled={disabled || isLoading}
+      type={type}
       aria-busy={isLoading || undefined}
       ref={ref}
       {...props}
     >
       {isLoading ? <span aria-hidden="true" className="size-4 animate-spin rounded-full border-2 border-current border-r-transparent" /> : null}
       {children}
-    </Component>
+    </button>
   );
 });
