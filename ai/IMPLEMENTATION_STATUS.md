@@ -11,7 +11,7 @@ Dernière mise à jour: 2026-09-02
 | 4 | IN_PROGRESS | — |
 | 5 | DONE | — |
 | 6 | DONE | 6.4 — Rapprochement (DONE) |
-| 7 | IN_PROGRESS | 7.1 — Catégories de dépenses (DONE) |
+| 7 | IN_PROGRESS | 7.2 — Enregistrement (DONE) |
 | 8 | PLANNED | — |
 | 9 | PLANNED | — |
 

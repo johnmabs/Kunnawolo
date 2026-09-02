@@ -31,6 +31,7 @@ model Organization {
   inventoryAdjustments InventoryAdjustment[]
   inventoryReconciliations InventoryReconciliation[]
   expenseCategories ExpenseCategory[]
+  expenses Expense[]
 }
 
 model Category {
@@ -53,9 +54,31 @@ model ExpenseCategory {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  expenses       Expense[]
 
   @@unique([organizationId, name])
   @@index([organizationId, isActive])
+}
+
+model Expense {
+  id                String          @id
+  organizationId    String
+  expenseCategoryId String
+  shopId            String?
+  amountMinor       BigInt
+  currency          String          @db.VarChar(3)
+  reference         String          @db.Text
+  description       String          @db.Text
+  actorId           String?
+  occurredAt        DateTime
+  createdAt         DateTime        @default(now())
+  organization      Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  expenseCategory   ExpenseCategory @relation(fields: [expenseCategoryId], references: [id], onDelete: Restrict)
+  shop              Shop?           @relation(fields: [shopId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, reference])
+  @@index([organizationId, shopId, occurredAt])
+  @@index([organizationId, expenseCategoryId, occurredAt])
 }
 
 model ProductPrice {
@@ -153,6 +176,7 @@ model Shop {
   inventorySessions InventorySession[]
   inventoryAdjustments InventoryAdjustment[]
   inventoryReconciliations InventoryReconciliation[]
+  expenses         Expense[]
   transfersFrom  StockTransfer[] @relation("TransferSourceShop")
   transfersTo    StockTransfer[] @relation("TransferDestinationShop")
 
