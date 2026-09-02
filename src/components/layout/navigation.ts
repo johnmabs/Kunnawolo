@@ -23,7 +23,7 @@ export const navigation: readonly NavigationGroup[] = [
       { enabled: true, href: "/inventory", icon: "stock", label: "Stock" },
       { enabled: true, href: "/transfers", icon: "transfers", label: "Transferts" },
       { enabled: true, href: "/catalog/products", icon: "catalog", label: "Catalogue" },
-      { href: "/expenses", icon: "expenses", label: "Dépenses" },
+      { enabled: true, href: "/expenses", icon: "expenses", label: "Dépenses" },
     ],
   },
   {
