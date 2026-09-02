@@ -14,7 +14,7 @@ export const navigation: readonly NavigationGroup[] = [
   {
     items: [
       { enabled: true, href: "/", icon: "dashboard", label: "Tableau de bord" },
-      { href: "/sales", icon: "sales", label: "Ventes" },
+      { enabled: true, href: "/sales", icon: "sales", label: "Ventes" },
     ],
   },
   {
