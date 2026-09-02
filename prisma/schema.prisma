@@ -210,6 +210,19 @@ model WorkspaceIdempotencyRecord {
   @@index([organizationId, createdAt])
 }
 
+model OperationalRelease {
+  id          String   @id
+  version     String   @db.VarChar(64)
+  reference   String   @db.Text
+  artifactSha String   @db.VarChar(128)
+  actorId     String?
+  releasedAt  DateTime
+  createdAt   DateTime @default(now())
+
+  @@unique([reference])
+  @@index([releasedAt])
+}
+
 model OrganizationMembership {
   id             String       @id
   organizationId String
