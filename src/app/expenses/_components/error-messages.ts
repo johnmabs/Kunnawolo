@@ -1,0 +1,3 @@
+import { ExpenseApiError } from "./types";
+const messages: Readonly<Record<string, string>> = { "expenses.read_forbidden": "Seuls les propriétaires et responsables autorisés peuvent consulter les dépenses.", "expenses.already_cancelled": "Cette dépense a déjà été annulée.", "expenses.cancellation_reference_taken": "Cette référence d’annulation est déjà utilisée.", "expenses.expense_not_found": "Cette dépense n’existe plus.", "security.invalid_api_key": "La clé d’accès est invalide ou révoquée." };
+export function expenseErrorMessage(error: unknown) { return error instanceof ExpenseApiError ? messages[error.code] ?? `Une erreur est survenue (${error.code}).` : "Une erreur inattendue est survenue."; }
