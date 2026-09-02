@@ -1,37 +1,93 @@
 @import "tailwindcss";
 
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-sidebar: var(--sidebar);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-border: var(--border);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+}
+
 :root {
   color-scheme: light;
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --surface-subtle: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --sidebar: #0b2a4a;
+  --primary: #0b63ce;
+  --primary-hover: #084fad;
+  --success: #16865c;
+  --warning: #d97706;
+  --danger: #d92d20;
+  --info: #2563eb;
+  --border: #e2e8f0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
-body { background: #f5f7f4; color: #152018; font-family: Arial, sans-serif; }
-button, input { font: inherit; }
-button:focus-visible, input:focus-visible { outline: 3px solid #176b4b; outline-offset: 2px; }
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
 .console-shell { box-sizing: border-box; margin: auto; max-width: 72rem; min-height: 100vh; padding: clamp(1rem, 4vw, 3rem); }
 .console-header { max-width: 48rem; }
 .console-header h1 { font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1.05; margin: .35rem 0 1rem; }
-.console-header p { color: #405046; line-height: 1.55; }
-.eyebrow { color: #176b4b; font-size: .85rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.console-panel { background: #fff; border: 1px solid #dbe5dc; border-radius: 1rem; box-shadow: 0 8px 24px #15201812; margin: 2rem 0; padding: clamp(1rem, 3vw, 2rem); }
+.console-header p { color: var(--text-secondary); line-height: 1.55; }
+.eyebrow { color: var(--primary); font-size: .85rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.console-panel { background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; box-shadow: 0 8px 24px #0f172a12; margin: 2rem 0; padding: clamp(1rem, 3vw, 2rem); }
 .console-panel h2, .metric h2 { font-size: 1rem; margin-top: 0; }
 .console-fields { display: grid; gap: 1rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 label { display: grid; font-weight: 700; gap: .4rem; }
-label span { color: #59665d; font-size: .85rem; font-weight: 400; }
-input { border: 1px solid #8a9b8f; border-radius: .5rem; min-height: 2.75rem; padding: 0 .7rem; }
+label span { color: var(--text-secondary); font-size: .85rem; font-weight: 400; }
+input { border: 1px solid var(--border); border-radius: .5rem; min-height: 2.75rem; padding: 0 .7rem; }
 .checkbox { align-items: center; display: flex; font-weight: 400; margin-top: 1rem; }
 .checkbox input { min-height: auto; }
 .console-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.25rem; }
-button { background: #176b4b; border: 1px solid #176b4b; border-radius: .5rem; color: white; cursor: pointer; font-weight: 700; min-height: 2.75rem; padding: 0 1rem; }
-button.secondary { background: white; color: #176b4b; }
+button { background: var(--primary); border: 1px solid var(--primary); border-radius: .5rem; color: white; cursor: pointer; font-weight: 700; min-height: 2.75rem; padding: 0 1rem; }
+button.secondary { background: var(--surface); color: var(--primary); }
 button:disabled { cursor: not-allowed; opacity: .55; }
-.console-status { min-height: 1.5rem; color: #405046; }
+.console-status { min-height: 1.5rem; color: var(--text-secondary); }
 .metric-grid { display: grid; gap: 1rem; grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.metric { background: #eaf3eb; border-radius: .75rem; min-width: 0; padding: 1rem; }
+.metric { background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; min-width: 0; padding: 1rem; }
 .metric p { font-size: clamp(1.25rem, 3vw, 2rem); font-variant-numeric: tabular-nums; margin: .5rem 0 0; overflow-wrap: anywhere; }
 .metric-grid.compact .metric { padding: .7rem; }
 @media (max-width: 46rem) { .console-fields, .metric-grid { grid-template-columns: 1fr; } .console-actions button { width: 100%; } }
