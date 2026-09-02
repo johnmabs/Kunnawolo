@@ -27,7 +27,7 @@ export function SaleCart({ busyLineId, cart, onDiscount, onFinalize, onQuantityC
           <ul className="grid gap-3">{cart.lines.map((line) => <SaleCartLine busy={busyLineId !== null} key={line.id} line={line} onDiscount={() => onDiscount(line)} onQuantityChange={(quantity) => onQuantityChange(line, quantity)} onRemove={() => onRemove(line)} />)}</ul>
         )}
       </div>
-      <div className="border-t border-border bg-surface p-4 sm:p-6">
+      <div className="sticky bottom-0 z-10 border-t border-border bg-surface p-4 shadow-[0_-8px_20px_-16px_rgba(15,23,42,0.35)] sm:p-6 lg:static lg:shadow-none">
         <SaleSummary cart={cart} />
         <Button className="mt-5 w-full" disabled={cart.lines.length === 0 || busyLineId !== null} onClick={onFinalize} size="lg">
           {currency ? `Finaliser — ${formatMoney(cart.totalMinor, currency)}` : "Finaliser"}

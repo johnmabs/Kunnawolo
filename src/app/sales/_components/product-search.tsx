@@ -47,7 +47,7 @@ export function ProductSearch({ access, busyProductId, onAdd }: ProductSearchPro
   }, [runSearch]);
 
   return (
-    <section aria-labelledby="product-search-title" className="flex min-h-0 flex-col">
+    <section aria-labelledby="product-search-title" className="flex min-h-0 flex-col max-lg:max-h-[55dvh]">
       <div className="border-b border-border p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-text-primary" id="product-search-title">Produits</h2>
@@ -56,7 +56,7 @@ export function ProductSearch({ access, busyProductId, onAdd }: ProductSearchPro
         <SearchInput aria-label="Rechercher un produit" className="mt-4" onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher nom, code ou code-barres…" value={query} />
         <p className="mt-2 text-xs text-text-secondary">Saisissez au moins deux caractères. La projection des prix de vente reste un BACKEND GAP confirmé.</p>
       </div>
-      <div className="flex-1 p-4 sm:p-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         {normalizedQuery.length < 2 ? <EmptyState description="Recherchez un produit par son nom, son code ou son code-barres." title="Commencez votre recherche" /> : null}
         {loading ? <div className="grid gap-3" aria-label="Chargement des produits"><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /></div> : null}
         {!loading && error ? <ErrorState description={error} onRetry={() => void runSearch()} /> : null}

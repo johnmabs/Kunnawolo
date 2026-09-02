@@ -11,7 +11,7 @@ export function ThresholdDialog({ busy, detail, onConfirm, onOpenChange, open }:
   return (
     <Dialog onOpenChange={onOpenChange} open={open}><DialogContent>
       <DialogHeader><DialogTitle>Modifier le seuil</DialogTitle><DialogDescription>{detail.productName}</DialogDescription></DialogHeader>
-      <div className="mt-6"><Field description="Utilisez zéro pour désactiver l’alerte de stock faible." label="Seuil d’alerte" name="low-stock-threshold" required>{({ controlId, descriptionId }) => <Input aria-describedby={descriptionId} autoFocus id={controlId} min={0} onChange={(event) => setThreshold(event.target.value)} step={1} type="number" value={threshold} />}</Field></div>
+      <div className="mt-6"><Field description="Utilisez zéro pour désactiver l’alerte de stock faible." label="Seuil d’alerte" name="low-stock-threshold" required>{({ controlId, descriptionId }) => <Input aria-describedby={descriptionId} autoFocus id={controlId} min={0} onChange={(event) => setThreshold(event.target.value)} required step={1} type="number" value={threshold} />}</Field></div>
       <DialogFooter><Button disabled={busy} onClick={() => onOpenChange(false)} variant="secondary">Annuler</Button><Button disabled={!valid || busy} isLoading={busy} onClick={() => onConfirm(parsedThreshold)}>Enregistrer</Button></DialogFooter>
     </DialogContent></Dialog>
   );

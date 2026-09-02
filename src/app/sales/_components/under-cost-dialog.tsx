@@ -36,7 +36,7 @@ export function UnderCostDialog({ lines, onContinue, onOpenChange, open }: Under
             </div>
           ))}
           <Field label="Justification" name="under-cost-reason" required>
-            {({ controlId }) => <Textarea id={controlId} onChange={(event) => setReason(event.target.value)} placeholder="Expliquez pourquoi cette vente doit continuer…" value={reason} />}
+            {({ controlId }) => <Textarea id={controlId} onChange={(event) => setReason(event.target.value)} placeholder="Expliquez pourquoi cette vente doit continuer…" required value={reason} />}
           </Field>
         </div>
         <DialogFooter><Button onClick={() => handleOpenChange(false)} variant="secondary">Retour</Button><Button disabled={!valid} onClick={() => { onContinue(reason.trim()); setReason(""); }}>Continuer</Button></DialogFooter>

@@ -35,7 +35,7 @@ function DiscountDialogForm({ busy, line, onApply, onOpenChange, open }: Omit<Di
             <dt className="text-text-secondary">Quantité</dt><dd className="text-right font-medium">{line.quantity}</dd>
           </dl>
           <Field error={!valid && discount.length > 0 ? "La remise doit être comprise entre zéro et le montant de la ligne." : undefined} label="Remise totale" name="line-discount" required>
-            {({ controlId, errorId }) => <div className="relative"><Input aria-describedby={errorId} id={controlId} invalid={!valid} min={0} onChange={(event) => setDiscount(event.target.value)} step={1} type="number" value={discount} /><span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-secondary">{line.currency}</span></div>}
+            {({ controlId, errorId }) => <div className="relative"><Input aria-describedby={errorId} id={controlId} invalid={!valid} min={0} onChange={(event) => setDiscount(event.target.value)} required step={1} type="number" value={discount} /><span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-secondary">{line.currency}</span></div>}
           </Field>
           <div className="rounded-lg border border-border p-4"><p className="text-xs text-text-secondary">Nouveau total</p><p className="mt-1 text-xl font-semibold tabular-nums">{valid ? formatMoney(grossMinor - discountMinor, line.currency) : "—"}</p></div>
         </div>

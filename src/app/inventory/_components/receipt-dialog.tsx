@@ -14,7 +14,7 @@ export function ReceiptDialog({ busy, detail, onConfirm, onOpenChange, open }: R
       <DialogHeader><DialogTitle>Réceptionner du stock</DialogTitle><DialogDescription>{detail.productName}</DialogDescription></DialogHeader>
       <div className="mt-6 grid gap-4">
         <div className="rounded-lg bg-surface-subtle p-4"><p className="text-xs text-text-secondary">Stock actuel</p><p className="mt-1 text-2xl font-semibold tabular-nums">{detail.quantity}</p></div>
-        <Field label="Quantité reçue" name="received-quantity" required>{({ controlId }) => <Input autoFocus id={controlId} min={1} onChange={(event) => setQuantity(event.target.value)} step={1} type="number" value={quantity} />}</Field>
+        <Field label="Quantité reçue" name="received-quantity" required>{({ controlId }) => <Input autoFocus id={controlId} min={1} onChange={(event) => setQuantity(event.target.value)} required step={1} type="number" value={quantity} />}</Field>
         <Field description="Facultative pour l’utilisateur ; une référence technique sera conservée dans tous les cas." label="Référence externe" name="receipt-reference">{({ controlId, descriptionId }) => <Input aria-describedby={descriptionId} id={controlId} onChange={(event) => setReference(event.target.value)} value={reference} />}</Field>
         <div className="rounded-lg border border-border p-4"><p className="text-xs text-text-secondary">Après réception</p><p className="mt-1 text-xl font-semibold tabular-nums">{valid ? detail.quantity + parsedQuantity : "—"}</p></div>
       </div>
