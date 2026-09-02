@@ -1,4 +1,4 @@
-import type { StockTransfer, StockTransferLine, StockTransferReception, StockTransferShipment } from "../../domain/stock-transfer";
+import type { StockTransfer, StockTransferCancellation, StockTransferLine, StockTransferReception, StockTransferShipment } from "../../domain/stock-transfer";
 
 export type TransferAudit = Readonly<{ organizationId: string; actorId: string | null; action: string }>;
 
@@ -11,4 +11,6 @@ export interface StockTransferRepository {
   dispatch(shipment: StockTransferShipment): Promise<StockTransferShipment>;
   findReceptionByReference(organizationId: string, reference: string): Promise<StockTransferReception | null>;
   receive(reception: StockTransferReception): Promise<StockTransferReception>;
+  findCancellationByReference(organizationId: string, reference: string): Promise<StockTransferCancellation | null>;
+  cancel(cancellation: StockTransferCancellation): Promise<StockTransferCancellation>;
 }

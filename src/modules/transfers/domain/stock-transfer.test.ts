@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Identifier } from "@/shared/domain/identifier";
 import { Quantity } from "@/shared/domain/quantity";
-import { StockTransfer, StockTransferLine, StockTransferShipment } from "./stock-transfer";
+import { StockTransfer, StockTransferCancellation, StockTransferLine, StockTransferShipment } from "./stock-transfer";
 
 describe("StockTransfer", () => {
   it("rejects identical shops and non-positive lines", () => {
@@ -20,5 +20,11 @@ describe("StockTransfer", () => {
     expect(() => StockTransferShipment.create(empty, "EXP", "actor", new Date())).toThrowError(expect.objectContaining({ code: "transfers.empty_transfer" }));
     const transfer = empty.addOrReplace(StockTransferLine.create({ id: Identifier.fromString("line"), productId: Identifier.fromString("product"), quantity: Quantity.fromNumber(1) }));
     expect(StockTransferShipment.create(transfer, "  EXP-Ɛ  ", "actor", new Date())).toMatchObject({ reference: "EXP-Ɛ" });
+  });
+
+  it("requires a Unicode cancellation reason", () => {
+    const transfer = StockTransfer.draft({ id: Identifier.fromString("cancel"), organizationId: Identifier.fromString("org"), sourceShopId: Identifier.fromString("source"), destinationShopId: Identifier.fromString("destination") });
+    expect(() => StockTransferCancellation.create(transfer, "ANN", " ", "actor", new Date())).toThrowError(expect.objectContaining({ code: "transfers.invalid_cancellation_reason" }));
+    expect(StockTransferCancellation.create(transfer, "  ANN-Ɛ  ", " Écart ɲa ", "actor", new Date())).toMatchObject({ reference: "ANN-Ɛ", reason: "Écart ɲa" });
   });
 });

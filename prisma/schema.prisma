@@ -181,6 +181,10 @@ model StockTransfer {
   receptionReference String? @db.Text
   receivedByActorId String?
   receivedAt        DateTime?
+  cancellationReference String? @db.Text
+  cancellationReason String? @db.Text
+  cancelledByActorId String?
+  cancelledAt       DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
@@ -192,6 +196,7 @@ model StockTransfer {
   @@index([organizationId, destinationShopId, status])
   @@unique([organizationId, shipmentReference])
   @@unique([organizationId, receptionReference])
+  @@unique([organizationId, cancellationReference])
 }
 
 model StockTransferLine {

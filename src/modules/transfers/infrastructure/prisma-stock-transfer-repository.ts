@@ -3,7 +3,7 @@ import { DomainError } from "@/shared/domain/domain-error";
 import { Identifier } from "@/shared/domain/identifier";
 import { Quantity } from "@/shared/domain/quantity";
 import type { StockTransferRepository, TransferAudit } from "../application/ports/stock-transfer-repository";
-import { StockTransfer, StockTransferLine, StockTransferReception, StockTransferShipment } from "../domain/stock-transfer";
+import { StockTransfer, StockTransferCancellation, StockTransferLine, StockTransferReception, StockTransferShipment } from "../domain/stock-transfer";
 
 type ShipmentRow = Readonly<{
   id: string;
@@ -27,6 +27,11 @@ type ReceptionRow = ShipmentRow & Readonly<{ receptionReference: string | null; 
 function receptionFromRow(row: ReceptionRow): StockTransferReception {
   if (row.receptionReference === null || row.receivedAt === null) throw new DomainError("transfers.invalid_reception_state", "Reception metadata is incomplete.");
   return StockTransferReception.create(shipmentFromRow(row), row.receptionReference, row.receivedByActorId, row.receivedAt);
+}
+
+function cancellationFromRow(row: Readonly<{ id: string; organizationId: string; sourceShopId: string; cancellationReference: string | null; cancellationReason: string | null; cancelledByActorId: string | null; cancelledAt: Date | null }>): StockTransferCancellation {
+  if (row.cancellationReference === null || row.cancellationReason === null || row.cancelledAt === null) throw new DomainError("transfers.invalid_cancellation_state", "Cancellation metadata is incomplete.");
+  return StockTransferCancellation.create(StockTransfer.draft({ id: Identifier.fromString(row.id), organizationId: Identifier.fromString(row.organizationId), sourceShopId: Identifier.fromString(row.sourceShopId), destinationShopId: Identifier.fromString("historical-destination") }), row.cancellationReference, row.cancellationReason, row.cancelledByActorId, row.cancelledAt);
 }
 
 export class PrismaStockTransferRepository implements StockTransferRepository {
@@ -137,6 +142,25 @@ export class PrismaStockTransferRepository implements StockTransferRepository {
       await tx.stockTransfer.update({ where: { id: shipment.transferId.value }, data: { status: "RECEIVED" } });
       await tx.organizationAudit.create({ data: { id: crypto.randomUUID(), organizationId: shipment.organizationId.value, actorId: reception.actorId, action: `transfer.received:${shipment.transferId.value}:${reception.reference}` } });
       return reception;
+    });
+  }
+
+  public async findCancellationByReference(organizationId: string, reference: string): Promise<StockTransferCancellation | null> {
+    const row = await this.prisma.stockTransfer.findFirst({ where: { organizationId, cancellationReference: reference, status: "CANCELLED" } });
+    return row === null ? null : cancellationFromRow(row);
+  }
+
+  public async cancel(cancellation: StockTransferCancellation): Promise<StockTransferCancellation> {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.stockTransfer.findFirst({ where: { organizationId: cancellation.organizationId.value, cancellationReference: cancellation.reference, status: "CANCELLED" } });
+      if (existing !== null) {
+        if (existing.id !== cancellation.transferId.value) throw new DomainError("transfers.cancellation_reference_taken", "The cancellation reference is already used.");
+        return cancellationFromRow(existing);
+      }
+      const updated = await tx.stockTransfer.updateMany({ where: { id: cancellation.transferId.value, organizationId: cancellation.organizationId.value, status: "DRAFT" }, data: { status: "CANCELLED", cancellationReference: cancellation.reference, cancellationReason: cancellation.reason, cancelledByActorId: cancellation.actorId, cancelledAt: cancellation.cancelledAt } });
+      if (updated.count !== 1) throw new DomainError("transfers.draft_not_found", "Only a draft transfer can be cancelled.");
+      await tx.organizationAudit.create({ data: { id: crypto.randomUUID(), organizationId: cancellation.organizationId.value, actorId: cancellation.actorId, action: `transfer.cancelled:${cancellation.transferId.value}:${cancellation.reference}` } });
+      return cancellation;
     });
   }
 }

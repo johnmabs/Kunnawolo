@@ -78,3 +78,14 @@ export class StockTransferReception {
     return new StockTransferReception(shipment, normalizedReference, actorId, receivedAt);
   }
 }
+
+export class StockTransferCancellation {
+  private constructor(public readonly transferId: Identifier, public readonly organizationId: Identifier, public readonly sourceShopId: Identifier, public readonly reference: string, public readonly reason: string, public readonly actorId: string | null, public readonly cancelledAt: Date) {}
+  public static create(transfer: StockTransfer, reference: string, reason: string, actorId: string | null, cancelledAt: Date): StockTransferCancellation {
+    const normalizedReference = reference.trim().normalize("NFC");
+    const normalizedReason = reason.trim().normalize("NFC");
+    if (normalizedReference.length === 0) throw new DomainError("transfers.invalid_cancellation_reference", "A cancellation reference must be non-empty.");
+    if (normalizedReason.length === 0) throw new DomainError("transfers.invalid_cancellation_reason", "A cancellation reason must be non-empty.");
+    return new StockTransferCancellation(transfer.id, transfer.organizationId, transfer.sourceShopId, normalizedReference, normalizedReason, actorId, cancelledAt);
+  }
+}
