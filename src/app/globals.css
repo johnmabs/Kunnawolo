@@ -67,27 +67,3 @@ textarea {
 ::selection {
   background: color-mix(in srgb, var(--primary) 20%, transparent);
 }
-
-.console-shell { box-sizing: border-box; margin: auto; max-width: 72rem; min-height: 100vh; padding: clamp(1rem, 4vw, 3rem); }
-.console-header { max-width: 48rem; }
-.console-header h1 { font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1.05; margin: .35rem 0 1rem; }
-.console-header p { color: var(--text-secondary); line-height: 1.55; }
-.eyebrow { color: var(--primary); font-size: .85rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.console-panel { background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; box-shadow: 0 8px 24px #0f172a12; margin: 2rem 0; padding: clamp(1rem, 3vw, 2rem); }
-.console-panel h2, .metric h2 { font-size: 1rem; margin-top: 0; }
-.console-fields { display: grid; gap: 1rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-label { display: grid; font-weight: 700; gap: .4rem; }
-label span { color: var(--text-secondary); font-size: .85rem; font-weight: 400; }
-input { border: 1px solid var(--border); border-radius: .5rem; min-height: 2.75rem; padding: 0 .7rem; }
-.checkbox { align-items: center; display: flex; font-weight: 400; margin-top: 1rem; }
-.checkbox input { min-height: auto; }
-.console-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.25rem; }
-button { background: var(--primary); border: 1px solid var(--primary); border-radius: .5rem; color: white; cursor: pointer; font-weight: 700; min-height: 2.75rem; padding: 0 1rem; }
-button.secondary { background: var(--surface); color: var(--primary); }
-button:disabled { cursor: not-allowed; opacity: .55; }
-.console-status { min-height: 1.5rem; color: var(--text-secondary); }
-.metric-grid { display: grid; gap: 1rem; grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.metric { background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; min-width: 0; padding: 1rem; }
-.metric p { font-size: clamp(1.25rem, 3vw, 2rem); font-variant-numeric: tabular-nums; margin: .5rem 0 0; overflow-wrap: anywhere; }
-.metric-grid.compact .metric { padding: .7rem; }
-@media (max-width: 46rem) { .console-fields, .metric-grid { grid-template-columns: 1fr; } .console-actions button { width: 100%; } }
