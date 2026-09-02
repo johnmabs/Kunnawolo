@@ -148,7 +148,7 @@ export function TransferDraftDrawer({ access, onOpenChange, onUpdated, open, tra
                     <div className="min-w-0"><p className="truncate font-medium">{line.productName}</p><p className="text-xs text-text-secondary">{line.productCode ?? "Sans code"}</p></div>
                     <div aria-label={`Quantité de ${line.productName}`} className="flex items-center gap-2">
                       <Button aria-label={`Diminuer ${line.productName}`} disabled={line.quantity <= 1 || savingProductId === line.productId} onClick={() => void setQuantity(line, line.quantity - 1)} size="icon" variant="secondary">−</Button>
-                      <output className="min-w-10 text-center text-lg font-semibold tabular-nums">{line.quantity}</output>
+                      <output aria-live="polite" className="min-w-10 text-center text-lg font-semibold tabular-nums">{line.quantity}</output>
                       <Button aria-label={`Augmenter ${line.productName}`} disabled={savingProductId === line.productId} onClick={() => void setQuantity(line, line.quantity + 1)} size="icon" variant="secondary">+</Button>
                     </div>
                   </article>

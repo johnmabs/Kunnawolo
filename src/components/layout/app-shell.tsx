@@ -13,6 +13,7 @@ function AppShellContent({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <ToastProvider>
       <div className="min-h-dvh bg-background md:grid md:grid-cols-[4.5rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)]" data-compact={compact}>
+        <a className="fixed left-3 top-3 z-[110] -translate-y-20 rounded-md bg-surface px-4 py-3 font-semibold text-primary shadow-lg focus:translate-y-0" href="#main-content">Aller au contenu principal</a>
         <div className="sticky top-0 hidden h-dvh md:block"><Sidebar /></div>
         <div className="min-w-0">
           <Topbar
@@ -21,7 +22,7 @@ function AppShellContent({ children }: Readonly<{ children: ReactNode }>) {
             shopLabel={workspaceShopId.trim() ? `ID : ${workspaceShopId.trim()}` : "Boutique non définie"}
             userLabel="Identité indisponible"
           />
-          <main>{children}</main>
+          <main id="main-content" tabIndex={-1}>{children}</main>
         </div>
       </div>
       <Drawer onOpenChange={setMobileNavigationOpen} open={mobileNavigationOpen}>
