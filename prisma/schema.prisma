@@ -26,6 +26,7 @@ model Organization {
   saleCancellations SaleCancellation[]
   salesSequence  SalesSequence?
   stockTransfers StockTransfer[]
+  stockLosses    StockLoss[]
 }
 
 model Category {
@@ -74,6 +75,7 @@ model Product {
   saleLines      SaleLine[]
   stockMovements StockMovement[]
   transferLines  StockTransferLine[]
+  stockLosses    StockLoss[]
 
   @@unique([organizationId, code])
   @@unique([organizationId, barcode])
@@ -127,10 +129,30 @@ model Shop {
   stockLevels    StockLevel[]
   stockMovements StockMovement[]
   saleCarts      SaleCart[]
+  stockLosses    StockLoss[]
   transfersFrom  StockTransfer[] @relation("TransferSourceShop")
   transfersTo    StockTransfer[] @relation("TransferDestinationShop")
 
   @@unique([organizationId, code])
+}
+
+model StockLoss {
+  id             String   @id
+  organizationId String
+  shopId         String
+  productId      String
+  quantity       Decimal  @db.Decimal(18, 3)
+  reason         String   @db.Text
+  referenceCostMinor BigInt
+  currency       String   @db.VarChar(3)
+  actorId        String?
+  occurredAt     DateTime
+  createdAt      DateTime @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  shop           Shop     @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, shopId, occurredAt])
 }
 
 model StockLevel {

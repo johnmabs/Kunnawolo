@@ -1,0 +1,5 @@
+CREATE TABLE "StockLoss" ("id" TEXT NOT NULL, "organizationId" TEXT NOT NULL, "shopId" TEXT NOT NULL, "productId" TEXT NOT NULL, "quantity" DECIMAL(18,3) NOT NULL, "reason" TEXT NOT NULL, "referenceCostMinor" BIGINT NOT NULL, "currency" VARCHAR(3) NOT NULL, "actorId" TEXT, "occurredAt" TIMESTAMP(3) NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "StockLoss_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "StockLoss_organizationId_shopId_occurredAt_idx" ON "StockLoss"("organizationId", "shopId", "occurredAt");
+ALTER TABLE "StockLoss" ADD CONSTRAINT "StockLoss_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "StockLoss" ADD CONSTRAINT "StockLoss_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "StockLoss" ADD CONSTRAINT "StockLoss_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
