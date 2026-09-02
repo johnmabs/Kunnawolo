@@ -34,6 +34,7 @@ model Organization {
   expenses Expense[]
   expenseCancellations ExpenseCancellation[]
   reportExports ReportExport[]
+  apiAccessKeys ApiAccessKey[]
 }
 
 model Category {
@@ -151,6 +152,24 @@ model UserAccount {
   displayName String                  @db.Text
   createdAt DateTime                 @default(now())
   memberships OrganizationMembership[]
+  apiAccessKeys ApiAccessKey[]
+}
+
+model ApiAccessKey {
+  id           String      @id
+  organizationId String
+  actorId      String
+  label        String      @db.Text
+  secretSalt   String      @db.Text
+  secretHash   String      @db.Text
+  expiresAt    DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime    @default(now())
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor        UserAccount @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, label])
+  @@index([organizationId, actorId])
 }
 
 model OrganizationMembership {

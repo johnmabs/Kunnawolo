@@ -11,10 +11,11 @@ import { ExportDashboardCsv } from "@/modules/reporting/application/export-dashb
 import { ViewDashboard } from "@/modules/reporting/application/view-dashboard";
 import { PrismaReportExportRepository } from "@/modules/reporting/infrastructure/prisma-report-export-repository";
 import { PrismaReportingReadAuthorization } from "@/modules/reporting/infrastructure/prisma-reporting-read-authorization";
+import { authenticateReportRequest } from "../../report-api-access";
 
 export const dynamic = "force-dynamic";
 
-type ExportRequest = Readonly<{ organizationId?: string; shopId?: string | null; occurredFrom?: string | null; occurredTo?: string | null; actorId?: string | null; reference?: string }>;
+type ExportRequest = Readonly<{ organizationId?: string; shopId?: string | null; occurredFrom?: string | null; occurredTo?: string | null; reference?: string }>;
 
 const toDate = (value: string | null | undefined): Date | null => value === null || value === undefined ? null : new Date(value);
 
@@ -38,11 +39,12 @@ export async function POST(request: Request) {
       new UuidIdentifierGenerator(),
       new SystemClock(),
     );
-    const reportExport = await exportDashboard.execute({ organizationId: input.organizationId, shopId: input.shopId, occurredFrom: toDate(input.occurredFrom), occurredTo: toDate(input.occurredTo), actorId: input.actorId ?? null, reference: input.reference });
+    const access = await authenticateReportRequest(prisma, request.headers.get("authorization"), input.organizationId);
+    const reportExport = await exportDashboard.execute({ organizationId: input.organizationId, shopId: input.shopId, occurredFrom: toDate(input.occurredFrom), occurredTo: toDate(input.occurredTo), actorId: access.actorId, reference: input.reference });
     return new NextResponse(reportExport.content, { status: 201, headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${reportExport.reference}.csv"` } });
   } catch (error) {
     const code = error instanceof Error && "code" in error ? String(error.code) : "reporting.export_failed";
-    return NextResponse.json({ code }, { status: 400 });
+    return NextResponse.json({ code }, { status: code.startsWith("security.") ? 401 : 400 });
   } finally {
     await prisma.$disconnect();
   }
