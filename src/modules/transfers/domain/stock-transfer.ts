@@ -43,3 +43,23 @@ export class StockTransfer {
     });
   }
 }
+
+export class StockTransferShipment {
+  private constructor(
+    public readonly transferId: Identifier,
+    public readonly organizationId: Identifier,
+    public readonly sourceShopId: Identifier,
+    public readonly destinationShopId: Identifier,
+    public readonly lines: readonly StockTransferLine[],
+    public readonly reference: string,
+    public readonly actorId: string | null,
+    public readonly sentAt: Date,
+  ) {}
+
+  public static create(transfer: StockTransfer, reference: string, actorId: string | null, sentAt: Date): StockTransferShipment {
+    if (transfer.lines.length === 0) throw new DomainError("transfers.empty_transfer", "An empty transfer cannot be sent.");
+    const normalizedReference = reference.trim().normalize("NFC");
+    if (normalizedReference.length === 0) throw new DomainError("transfers.invalid_shipment_reference", "A shipment reference must be non-empty.");
+    return new StockTransferShipment(transfer.id, transfer.organizationId, transfer.sourceShopId, transfer.destinationShopId, transfer.lines, normalizedReference, actorId, sentAt);
+  }
+}
