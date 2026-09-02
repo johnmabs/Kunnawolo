@@ -3,6 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createPrismaClient } from "@/infrastructure/prisma/prisma-client";
 import { OperationalObservation } from "../domain/operational-observation";
 import { PrismaOperationalObservabilityRepository } from "./prisma-operational-observability-repository";
+import { PrismaOperationalAlertRepository } from "./prisma-operational-alert-repository";
+import { OperationalAlertPageQuery } from "../domain/operational-alert-page-query";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (databaseUrl === undefined) throw new Error("DATABASE_URL is required for observability integration tests.");
@@ -39,5 +41,13 @@ describe("Prisma operational observability", () => {
     await expect(prisma.operationalMetric.count({ where: { organizationId, correlationId: "observability-correlation" } })).resolves.toBe(1);
     await expect(prisma.operationalAlert.findFirst({ where: { organizationId, code: "operation.slow", reference: "EXP-ɛ" } })).resolves.toMatchObject({ shopId: inactiveShopId, severity: "WARNING" });
     await expect(repository.record(OperationalObservation.create({ organizationId, shopId: otherShopId, action: "report.exported", reference: "cross-org", correlationId: "cross-org", durationMillis: 1, occurredAt: at }))).rejects.toMatchObject({ code: "observability.shop_not_found" });
+    await prisma.operationalAlert.createMany({ data: [
+      { id: "observability-alert-older", organizationId, shopId: inactiveShopId, code: "operation.retry", severity: "WARNING", reference: "ALERT-ɛ-1", correlationId: "alert-correlation-1", occurredAt: new Date("2026-09-01T12:00:00.000Z") },
+      { id: "observability-alert-newer", organizationId, shopId: inactiveShopId, code: "operation.retry", severity: "WARNING", reference: "ALERT-ɛ-2", correlationId: "alert-correlation-2", occurredAt: new Date("2026-09-03T12:00:00.000Z") },
+    ] });
+    const alerts = new PrismaOperationalAlertRepository(prisma);
+    const firstPage = await alerts.list(OperationalAlertPageQuery.create({ organizationId, shopId: inactiveShopId, limit: 2 }));
+    expect(firstPage.items[0]).toMatchObject({ id: "observability-alert-newer", reference: "ALERT-ɛ-2" });
+    await expect(alerts.list(OperationalAlertPageQuery.create({ organizationId, shopId: inactiveShopId, limit: 2, cursor: firstPage.nextCursor }))).resolves.toMatchObject({ items: [{ id: "observability-alert-older" }] });
   });
 });

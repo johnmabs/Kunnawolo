@@ -38,6 +38,7 @@ model Organization {
   operationalMetrics OperationalMetric[]
   operationalAlerts OperationalAlert[]
   workspacePreferences WorkspacePreference[]
+  workspaceIdempotencyRecords WorkspaceIdempotencyRecord[]
 }
 
 model Category {
@@ -157,6 +158,7 @@ model UserAccount {
   memberships OrganizationMembership[]
   apiAccessKeys ApiAccessKey[]
   workspacePreferences WorkspacePreference[]
+  workspaceIdempotencyRecords WorkspaceIdempotencyRecord[]
 }
 
 model ApiAccessKey {
@@ -190,6 +192,22 @@ model WorkspacePreference {
 
   @@unique([organizationId, actorId])
   @@index([organizationId, shopId])
+}
+
+model WorkspaceIdempotencyRecord {
+  id             String       @id
+  organizationId String
+  actorId        String
+  key            String       @db.Text
+  fingerprint    String       @db.Text
+  shopId         String?
+  isCompact      Boolean
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor          UserAccount  @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, actorId, key])
+  @@index([organizationId, createdAt])
 }
 
 model OrganizationMembership {
@@ -587,4 +605,5 @@ model OperationalAlert {
 
   @@unique([organizationId, code, reference])
   @@index([organizationId, shopId, occurredAt])
+  @@index([organizationId, shopId, occurredAt, id])
 }

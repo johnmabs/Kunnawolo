@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type Dashboard = Readonly<{ sales?: Readonly<{ revenue?: Readonly<{ amountMinor?: number; currency?: string }>; grossMargin?: Readonly<{ amountMinor?: number }> }>; stock?: Readonly<{ onHandQuantity?: Readonly<{ value?: number }>; anomalyCount?: number }>; estimatedResult?: Readonly<{ amount?: Readonly<{ amountMinor?: number }> }> }>;
 
@@ -12,6 +12,7 @@ export function OperationalConsole() {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [message, setMessage] = useState("Saisissez un périmètre et une clé d’accès pour consulter les indicateurs.");
   const [busy, setBusy] = useState(false);
+  const preferenceRequestKey = useRef(crypto.randomUUID());
 
   const headers = { Authorization: `Bearer ${apiKey}` };
 
@@ -34,9 +35,10 @@ export function OperationalConsole() {
 
   async function savePreference() {
     setBusy(true);
-    const response = await fetch("/api/workspace-preference", { method: "PUT", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ organizationId, shopId: shopId.trim() || null, isCompact: compact }) });
+    const response = await fetch("/api/workspace-preference", { method: "PUT", headers: { ...headers, "Content-Type": "application/json", "Idempotency-Key": preferenceRequestKey.current }, body: JSON.stringify({ organizationId, shopId: shopId.trim() || null, isCompact: compact }) });
     const body = await response.json() as Readonly<{ code?: string }>;
     setBusy(false);
+    if (response.ok) preferenceRequestKey.current = crypto.randomUUID();
     setMessage(response.ok ? "Préférence de poste enregistrée." : `Impossible d’enregistrer la préférence (${body.code ?? "erreur"}).`);
   }
 
