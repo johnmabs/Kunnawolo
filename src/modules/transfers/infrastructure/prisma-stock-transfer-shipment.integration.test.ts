@@ -5,9 +5,11 @@ import { Identifier } from "@/shared/domain/identifier";
 import { CreateStockTransfer } from "../application/create-stock-transfer";
 import { SaveStockTransferLine } from "../application/save-stock-transfer-line";
 import { SendStockTransfer } from "../application/send-stock-transfer";
+import { ReceiveStockTransfer } from "../application/receive-stock-transfer";
 import { PrismaStockTransferRepository } from "./prisma-stock-transfer-repository";
 import { PrismaTransferScope } from "./prisma-transfer-scope";
 import { PrismaTransfersDispatchAuthorization } from "./prisma-transfers-dispatch-authorization";
+import { PrismaTransfersReceptionAuthorization } from "./prisma-transfers-reception-authorization";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (databaseUrl === undefined) throw new Error("DATABASE_URL is required for transfer shipment integration tests.");
@@ -31,6 +33,7 @@ beforeAll(async () => {
   await prisma.organizationMembership.upsert({ where: { organizationId_userAccountId: { organizationId, userAccountId: managerId } }, create: { id: "shipment-manager-membership", organizationId, userAccountId: managerId, status: "ACTIVE", role: "MANAGER", activatedAt: now }, update: { status: "ACTIVE", role: "MANAGER" } });
   await prisma.organizationMembership.upsert({ where: { organizationId_userAccountId: { organizationId, userAccountId: cashierId } }, create: { id: "shipment-cashier-membership", organizationId, userAccountId: cashierId, status: "ACTIVE", role: "CASHIER", activatedAt: now }, update: { status: "ACTIVE", role: "CASHIER" } });
   await prisma.shopAssignment.upsert({ where: { membershipId_shopId: { membershipId: "shipment-manager-membership", shopId: sourceShopId } }, create: { id: "shipment-manager-assignment", membershipId: "shipment-manager-membership", shopId: sourceShopId }, update: {} });
+  await prisma.shopAssignment.upsert({ where: { membershipId_shopId: { membershipId: "shipment-manager-membership", shopId: destinationShopId } }, create: { id: "shipment-manager-destination-assignment", membershipId: "shipment-manager-membership", shopId: destinationShopId }, update: {} });
   await prisma.product.upsert({ where: { id: productId }, create: { id: productId, organizationId, name: "Nsiirin Ɛ", trackInventory: true }, update: { isActive: true, trackInventory: true } });
   await prisma.stockLevel.upsert({ where: { organizationId_shopId_productId: { organizationId, shopId: sourceShopId, productId } }, create: { id: "shipment-level", organizationId, shopId: sourceShopId, productId, quantity: 5 }, update: { quantity: 5 } });
 });
@@ -41,7 +44,7 @@ afterAll(async () => {
   await prisma.stockTransfer.deleteMany({ where: { organizationId } });
   await prisma.stockLevel.deleteMany({ where: { organizationId } });
   await prisma.product.deleteMany({ where: { id: productId } });
-  await prisma.shopAssignment.deleteMany({ where: { id: "shipment-manager-assignment" } });
+  await prisma.shopAssignment.deleteMany({ where: { id: { in: ["shipment-manager-assignment", "shipment-manager-destination-assignment"] } } });
   await prisma.organizationMembership.deleteMany({ where: { id: { in: ["shipment-manager-membership", "shipment-cashier-membership"] } } });
   await prisma.shop.deleteMany({ where: { id: { in: [sourceShopId, destinationShopId] } } });
   await prisma.organizationAudit.deleteMany({ where: { organizationId } });
@@ -64,5 +67,12 @@ describe("PrismaStockTransferRepository shipment", () => {
     expect(Number((await prisma.stockLevel.findUniqueOrThrow({ where: { organizationId_shopId_productId: { organizationId, shopId: sourceShopId, productId } } })).quantity)).toBe(3);
     await expect(prisma.stockTransfer.findUnique({ where: { id: transfer.id.value } })).resolves.toMatchObject({ status: "SENT", shipmentReference: "EXP-Ɛ", sentAt: now });
     await expect(prisma.stockMovement.count({ where: { organizationId, reason: "transfer.sent:EXP-Ɛ" } })).resolves.toBe(1);
+    const receive = new ReceiveStockTransfer(repository, new PrismaTransfersReceptionAuthorization(prisma), { now: () => now });
+    await expect(receive.execute({ organizationId, transferId: transfer.id.value, reference: "REC-Ɛ", actorId: cashierId })).rejects.toMatchObject({ code: "transfers.reception_forbidden" });
+    await receive.execute({ organizationId, transferId: transfer.id.value, reference: "  REC-Ɛ  ", actorId: managerId });
+    await receive.execute({ organizationId, transferId: transfer.id.value, reference: "REC-Ɛ", actorId: managerId });
+    expect(Number((await prisma.stockLevel.findUniqueOrThrow({ where: { organizationId_shopId_productId: { organizationId, shopId: destinationShopId, productId } } })).quantity)).toBe(2);
+    await expect(prisma.stockTransfer.findUnique({ where: { id: transfer.id.value } })).resolves.toMatchObject({ status: "RECEIVED", receptionReference: "REC-Ɛ", receivedAt: now });
+    await expect(prisma.stockMovement.count({ where: { organizationId, reason: "transfer.received:REC-Ɛ" } })).resolves.toBe(1);
   });
 });

@@ -3,7 +3,7 @@ import { DomainError } from "@/shared/domain/domain-error";
 import { Identifier } from "@/shared/domain/identifier";
 import { Quantity } from "@/shared/domain/quantity";
 import type { StockTransferRepository, TransferAudit } from "../application/ports/stock-transfer-repository";
-import { StockTransfer, StockTransferLine, StockTransferShipment } from "../domain/stock-transfer";
+import { StockTransfer, StockTransferLine, StockTransferReception, StockTransferShipment } from "../domain/stock-transfer";
 
 type ShipmentRow = Readonly<{
   id: string;
@@ -20,6 +20,13 @@ function shipmentFromRow(row: ShipmentRow): StockTransferShipment {
   if (row.shipmentReference === null || row.sentAt === null) throw new DomainError("transfers.invalid_shipment_state", "Shipment metadata is incomplete.");
   const transfer = StockTransfer.draft({ id: Identifier.fromString(row.id), organizationId: Identifier.fromString(row.organizationId), sourceShopId: Identifier.fromString(row.sourceShopId), destinationShopId: Identifier.fromString(row.destinationShopId), lines: row.lines.map((line) => StockTransferLine.create({ id: Identifier.fromString(line.id), productId: Identifier.fromString(line.productId), quantity: Quantity.fromNumber(Number(line.quantity.toString())) })) });
   return StockTransferShipment.create(transfer, row.shipmentReference, row.sentByActorId, row.sentAt);
+}
+
+type ReceptionRow = ShipmentRow & Readonly<{ receptionReference: string | null; receivedByActorId: string | null; receivedAt: Date | null }>;
+
+function receptionFromRow(row: ReceptionRow): StockTransferReception {
+  if (row.receptionReference === null || row.receivedAt === null) throw new DomainError("transfers.invalid_reception_state", "Reception metadata is incomplete.");
+  return StockTransferReception.create(shipmentFromRow(row), row.receptionReference, row.receivedByActorId, row.receivedAt);
 }
 
 export class PrismaStockTransferRepository implements StockTransferRepository {
@@ -71,6 +78,11 @@ export class PrismaStockTransferRepository implements StockTransferRepository {
     return row === null ? null : shipmentFromRow(row);
   }
 
+  public async findShipment(organizationId: string, transferId: string): Promise<StockTransferShipment | null> {
+    const row = await this.prisma.stockTransfer.findFirst({ where: { id: transferId, organizationId, status: "SENT" }, include: { lines: true } });
+    return row === null ? null : shipmentFromRow(row);
+  }
+
   public async dispatch(shipment: StockTransferShipment): Promise<StockTransferShipment> {
     return this.prisma.$transaction(async (tx) => {
       const existing = await tx.stockTransfer.findFirst({ where: { organizationId: shipment.organizationId.value, shipmentReference: shipment.reference, status: "SENT" }, include: { lines: true } });
@@ -96,6 +108,35 @@ export class PrismaStockTransferRepository implements StockTransferRepository {
       await tx.stockTransfer.update({ where: { id: shipment.transferId.value }, data: { status: "SENT" } });
       await tx.organizationAudit.create({ data: { id: crypto.randomUUID(), organizationId: shipment.organizationId.value, actorId: shipment.actorId, action: `transfer.sent:${shipment.transferId.value}:${shipment.reference}` } });
       return shipment;
+    });
+  }
+
+  public async findReceptionByReference(organizationId: string, reference: string): Promise<StockTransferReception | null> {
+    const row = await this.prisma.stockTransfer.findFirst({ where: { organizationId, receptionReference: reference, status: "RECEIVED" }, include: { lines: true } });
+    return row === null ? null : receptionFromRow(row);
+  }
+
+  public async receive(reception: StockTransferReception): Promise<StockTransferReception> {
+    return this.prisma.$transaction(async (tx) => {
+      const shipment = reception.shipment;
+      const existing = await tx.stockTransfer.findFirst({ where: { organizationId: shipment.organizationId.value, receptionReference: reception.reference, status: "RECEIVED" }, include: { lines: true } });
+      if (existing !== null) {
+        if (existing.id !== shipment.transferId.value) throw new DomainError("transfers.reception_reference_taken", "The reception reference is already used.");
+        return receptionFromRow(existing);
+      }
+      const reserved = await tx.stockTransfer.updateMany({ where: { id: shipment.transferId.value, organizationId: shipment.organizationId.value, status: "SENT" }, data: { status: "RECEIVING", receptionReference: reception.reference, receivedByActorId: reception.actorId, receivedAt: reception.receivedAt } });
+      if (reserved.count !== 1) {
+        const current = await tx.stockTransfer.findFirst({ where: { id: shipment.transferId.value, organizationId: shipment.organizationId.value }, include: { lines: true } });
+        if (current?.status === "RECEIVED" && current.receptionReference === reception.reference) return receptionFromRow(current);
+        throw new DomainError("transfers.shipment_not_found", "The sent transfer does not belong to this organization.");
+      }
+      for (const line of shipment.lines) {
+        await tx.stockLevel.upsert({ where: { organizationId_shopId_productId: { organizationId: shipment.organizationId.value, shopId: shipment.destinationShopId.value, productId: line.productId.value } }, create: { id: crypto.randomUUID(), organizationId: shipment.organizationId.value, shopId: shipment.destinationShopId.value, productId: line.productId.value, quantity: line.quantity.value }, update: { quantity: { increment: line.quantity.value } } });
+        await tx.stockMovement.create({ data: { id: crypto.randomUUID(), organizationId: shipment.organizationId.value, shopId: shipment.destinationShopId.value, productId: line.productId.value, quantityDelta: line.quantity.value, reason: `transfer.received:${reception.reference}`, actorId: reception.actorId, idempotencyKey: `transfer-received:${shipment.transferId.value}:${line.id.value}`, occurredAt: reception.receivedAt } });
+      }
+      await tx.stockTransfer.update({ where: { id: shipment.transferId.value }, data: { status: "RECEIVED" } });
+      await tx.organizationAudit.create({ data: { id: crypto.randomUUID(), organizationId: shipment.organizationId.value, actorId: reception.actorId, action: `transfer.received:${shipment.transferId.value}:${reception.reference}` } });
+      return reception;
     });
   }
 }

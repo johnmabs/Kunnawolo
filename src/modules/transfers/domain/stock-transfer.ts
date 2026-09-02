@@ -63,3 +63,18 @@ export class StockTransferShipment {
     return new StockTransferShipment(transfer.id, transfer.organizationId, transfer.sourceShopId, transfer.destinationShopId, transfer.lines, normalizedReference, actorId, sentAt);
   }
 }
+
+export class StockTransferReception {
+  private constructor(
+    public readonly shipment: StockTransferShipment,
+    public readonly reference: string,
+    public readonly actorId: string | null,
+    public readonly receivedAt: Date,
+  ) {}
+
+  public static create(shipment: StockTransferShipment, reference: string, actorId: string | null, receivedAt: Date): StockTransferReception {
+    const normalizedReference = reference.trim().normalize("NFC");
+    if (normalizedReference.length === 0) throw new DomainError("transfers.invalid_reception_reference", "A reception reference must be non-empty.");
+    return new StockTransferReception(shipment, normalizedReference, actorId, receivedAt);
+  }
+}

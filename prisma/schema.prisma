@@ -178,6 +178,9 @@ model StockTransfer {
   shipmentReference String?  @db.Text
   sentByActorId     String?
   sentAt            DateTime?
+  receptionReference String? @db.Text
+  receivedByActorId String?
+  receivedAt        DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
@@ -188,6 +191,7 @@ model StockTransfer {
   @@index([organizationId, sourceShopId, status])
   @@index([organizationId, destinationShopId, status])
   @@unique([organizationId, shipmentReference])
+  @@unique([organizationId, receptionReference])
 }
 
 model StockTransferLine {
