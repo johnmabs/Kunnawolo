@@ -14,19 +14,19 @@ export const navigation: readonly NavigationGroup[] = [
   {
     items: [
       { enabled: true, href: "/", icon: "dashboard", label: "Tableau de bord" },
-      { href: "/ventes", icon: "sales", label: "Ventes" },
+      { href: "/sales", icon: "sales", label: "Ventes" },
     ],
   },
   {
     label: "Gestion",
     items: [
-      { href: "/stock", icon: "stock", label: "Stock" },
-      { href: "/catalogue/produits", icon: "catalog", label: "Catalogue" },
-      { href: "/depenses", icon: "expenses", label: "Dépenses" },
+      { href: "/inventory", icon: "stock", label: "Stock" },
+      { href: "/catalog/products", icon: "catalog", label: "Catalogue" },
+      { href: "/expenses", icon: "expenses", label: "Dépenses" },
     ],
   },
   {
     label: "Configuration",
-    items: [{ href: "/administration/organisation", icon: "admin", label: "Administration" }],
+    items: [{ href: "/administration/organization", icon: "admin", label: "Administration" }],
   },
 ];
