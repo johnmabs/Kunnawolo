@@ -4,7 +4,7 @@ import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogH
 
 export function PricingDialog({ busy, currency, onConfirm, onOpenChange, open, productName }: Readonly<{ busy: boolean; currency: string; onConfirm: (input: { referenceCostMinor: number; salePriceMinor: number; reference: string }) => void; onOpenChange: (open: boolean) => void; open: boolean; productName: string }>) {
   const [cost, setCost] = useState(""); const [price, setPrice] = useState(""); const [reference, setReference] = useState("");
-  const fractionDigits = new Intl.NumberFormat("fr-FR", { style: "currency", currency }).resolvedOptions().maximumFractionDigits;
+  const fractionDigits = new Intl.NumberFormat("fr-FR", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
   const factor = 10 ** fractionDigits; const costMinor = Math.round(Number(cost) * factor); const priceMinor = Math.round(Number(price) * factor);
   const valid = Number(cost) >= 0 && Number(price) > 0 && reference.trim().length > 0 && Number.isSafeInteger(costMinor) && Number.isSafeInteger(priceMinor);
   function submit(event: FormEvent) { event.preventDefault(); if (valid) onConfirm({ referenceCostMinor: costMinor, salePriceMinor: priceMinor, reference }); }
