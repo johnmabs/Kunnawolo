@@ -6,6 +6,7 @@ import { RemoveSaleLine } from "@/modules/sales/application/remove-sale-line";
 import { SaveSaleLine } from "@/modules/sales/application/save-sale-line";
 import { PrismaSaleCartRepository } from "@/modules/sales/infrastructure/prisma-sale-cart-repository";
 import { PrismaSalesScope } from "@/modules/sales/infrastructure/prisma-sales-scope";
+import { PrismaWorkspacePreferenceAuthorization } from "@/modules/identity-access/infrastructure/prisma-workspace-preference-authorization";
 import { authenticateApiRequest } from "../../../../_shared/api-access";
 import { apiErrorResponse } from "../../../../_shared/api-error";
 import { toSaleCartDto } from "../../../_shared/sale-dto";
@@ -27,6 +28,8 @@ async function saveLine(request: Request, context: RouteContext, updating: boole
     const access = await authenticateApiRequest(prisma, request.headers.get("authorization"), organizationId);
     const { cartId } = await context.params;
     const carts = new PrismaSaleCartRepository(prisma);
+    const currentCart = await new GetSaleCart(carts).execute({ organizationId, cartId });
+    await new PrismaWorkspacePreferenceAuthorization(prisma).authorize(organizationId, access.actorId, currentCart.shopId.value);
     await new SaveSaleLine(new PrismaSalesScope(prisma), carts, new UuidIdentifierGenerator()).execute({ organizationId, cartId, ...(updating ? { lineId: input.lineId?.trim() } : {}), productId, quantity: input.quantity as number, discountMinor: input.discountMinor as number, actorId: access.actorId });
     return NextResponse.json(toSaleCartDto(await new GetSaleCart(carts).execute({ organizationId, cartId })));
   } catch (error) {
@@ -57,6 +60,8 @@ export async function DELETE(request: Request, context: RouteContext) {
     const access = await authenticateApiRequest(prisma, request.headers.get("authorization"), organizationId);
     const { cartId } = await context.params;
     const carts = new PrismaSaleCartRepository(prisma);
+    const currentCart = await new GetSaleCart(carts).execute({ organizationId, cartId });
+    await new PrismaWorkspacePreferenceAuthorization(prisma).authorize(organizationId, access.actorId, currentCart.shopId.value);
     await new RemoveSaleLine(carts).execute({ organizationId, cartId, lineId, actorId: access.actorId });
     return NextResponse.json(toSaleCartDto(await new GetSaleCart(carts).execute({ organizationId, cartId })));
   } catch (error) {

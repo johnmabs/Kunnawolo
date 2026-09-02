@@ -4,6 +4,7 @@ import { UuidIdentifierGenerator } from "@/infrastructure/identifiers/uuid-ident
 import { CreateSaleCart } from "@/modules/sales/application/create-sale-cart";
 import { PrismaSaleCartRepository } from "@/modules/sales/infrastructure/prisma-sale-cart-repository";
 import { PrismaSalesScope } from "@/modules/sales/infrastructure/prisma-sales-scope";
+import { PrismaWorkspacePreferenceAuthorization } from "@/modules/identity-access/infrastructure/prisma-workspace-preference-authorization";
 import { authenticateApiRequest } from "../../_shared/api-access";
 import { apiErrorResponse } from "../../_shared/api-error";
 import { toSaleCartDto } from "../_shared/sale-dto";
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
 
   try {
     const access = await authenticateApiRequest(prisma, request.headers.get("authorization"), organizationId);
+    await new PrismaWorkspacePreferenceAuthorization(prisma).authorize(organizationId, access.actorId, shopId);
     const cart = await new CreateSaleCart(new PrismaSalesScope(prisma), new PrismaSaleCartRepository(prisma), new UuidIdentifierGenerator()).execute({ organizationId, shopId, actorId: access.actorId });
     return NextResponse.json(toSaleCartDto(cart), { status: 201 });
   } catch (error) {
