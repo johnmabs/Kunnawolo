@@ -1,4 +1,5 @@
 export type NavigationItem = Readonly<{
+  enabled?: boolean;
   href: string;
   icon: "dashboard" | "sales" | "stock" | "catalog" | "expenses" | "admin";
   label: string;
@@ -12,7 +13,7 @@ export type NavigationGroup = Readonly<{
 export const navigation: readonly NavigationGroup[] = [
   {
     items: [
-      { href: "/", icon: "dashboard", label: "Tableau de bord" },
+      { enabled: true, href: "/", icon: "dashboard", label: "Tableau de bord" },
       { href: "/ventes", icon: "sales", label: "Ventes" },
     ],
   },

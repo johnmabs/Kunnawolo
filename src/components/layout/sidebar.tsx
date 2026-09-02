@@ -31,12 +31,15 @@ export function Sidebar({ mobile = false, onNavigate }: SidebarProps) {
             <ul className="grid gap-1">
               {group.items.map((item) => {
                 const current = isCurrentPath(pathname, item.href);
+                const itemClassName = cn("flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors", item.enabled ? "text-slate-200 hover:bg-white/10 hover:text-white focus-visible:outline-white/70" : "cursor-not-allowed text-slate-400", current && "bg-white/15 text-white", !mobile && "justify-center xl:justify-start");
+                const content = <><NavigationIcon className="size-5 shrink-0" name={item.icon} /><span className={cn("truncate", !mobile && "hidden xl:block")}>{item.label}</span></>;
                 return (
                   <li key={item.href}>
-                    <Link aria-current={current ? "page" : undefined} className={cn("flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-white/70", current && "bg-white/15 text-white", !mobile && "justify-center xl:justify-start")} href={item.href} onClick={onNavigate} title={!mobile ? item.label : undefined}>
-                      <NavigationIcon className="size-5 shrink-0" name={item.icon} />
-                      <span className={cn("truncate", !mobile && "hidden xl:block")}>{item.label}</span>
-                    </Link>
+                    {item.enabled ? (
+                      <Link aria-current={current ? "page" : undefined} className={itemClassName} href={item.href} onClick={onNavigate} title={!mobile ? item.label : undefined}>{content}</Link>
+                    ) : (
+                      <span aria-disabled="true" className={itemClassName} title={`${item.label} — prochaine étape`}>{content}</span>
+                    )}
                   </li>
                 );
               })}
