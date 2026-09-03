@@ -12,7 +12,7 @@ export async function GET() {
   try {
     const account = await authenticateWebRequest(prisma);
     const [memberships, preferences] = await Promise.all([
-      prisma.organizationMembership.findMany({ where: { userAccountId: account.id.value, status: "ACTIVE" }, include: { organization: true, shopAssignments: { include: { shop: true } } }, orderBy: { organization: { name: "asc" } } }),
+      prisma.organizationMembership.findMany({ where: { userAccountId: account.id.value, status: "ACTIVE" }, include: { organization: { include: { shops: true } }, shopAssignments: { include: { shop: true } } }, orderBy: { organization: { name: "asc" } } }),
       prisma.workspacePreference.findMany({ where: { actorId: account.id.value } }),
     ]);
     return NextResponse.json({
@@ -23,7 +23,7 @@ export async function GET() {
         currency: membership.organization.currency,
         role: membership.role,
         preference: (() => { const preference = preferences.find(({ organizationId }) => organizationId === membership.organizationId); return preference ? { shopId: preference.shopId, isCompact: preference.isCompact } : null; })(),
-        shops: membership.shopAssignments.filter(({ shop }) => shop.isActive).map(({ shop }) => ({ id: shop.id, name: shop.name, code: shop.code })),
+        shops: (membership.role === "OWNER" ? membership.organization.shops : membership.shopAssignments.map(({ shop }) => shop)).filter(({ isActive }) => isActive).sort((left, right) => left.name.localeCompare(right.name, "fr")).map((shop) => ({ id: shop.id, name: shop.name, code: shop.code })),
       })),
     });
   } catch (error) { return apiErrorResponse(error, "auth.session_read_failed"); }

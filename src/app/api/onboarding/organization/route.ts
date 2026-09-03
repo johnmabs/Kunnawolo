@@ -13,10 +13,10 @@ export async function POST(request: Request) {
   try {
     assertTrustedOrigin(request);
     const account = await authenticateWebRequest(prisma);
-    const input = await request.json() as { name?: unknown; currency?: unknown };
-    if (typeof input.name !== "string" || typeof input.currency !== "string") return NextResponse.json({ code: "organization.invalid_request" }, { status: 400 });
-    const organization = await new CreateOwnedOrganization(new PrismaOrganizationOnboardingRepository(prisma), new UuidIdentifierGenerator()).execute({ name: input.name, currency: input.currency, ownerUserAccountId: account.id.value });
-    return NextResponse.json({ id: organization.id.value, name: organization.name, currency: organization.currency, role: "OWNER" }, { status: 201 });
+    const input = await request.json() as { name?: unknown; currency?: unknown; shopName?: unknown; shopCode?: unknown };
+    if (typeof input.name !== "string" || typeof input.currency !== "string" || typeof input.shopName !== "string" || typeof input.shopCode !== "string") return NextResponse.json({ code: "organization.invalid_request" }, { status: 400 });
+    const created = await new CreateOwnedOrganization(new PrismaOrganizationOnboardingRepository(prisma), new UuidIdentifierGenerator()).execute({ name: input.name, currency: input.currency, ownerUserAccountId: account.id.value, shopName: input.shopName, shopCode: input.shopCode });
+    return NextResponse.json({ id: created.organization.id.value, name: created.organization.name, currency: created.organization.currency, role: "OWNER", initialShop: { id: created.initialShop.id.value, name: created.initialShop.name, code: created.initialShop.code } }, { status: 201 });
   } catch (error) { return apiErrorResponse(error, "organization.creation_failed"); }
   finally { await prisma.$disconnect(); }
 }
