@@ -1,30 +1,21 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useActionState } from "react";
 import { AuthError } from "@/components/auth";
-import { Button, Field, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import { Button, Field, Input } from "@/components/ui";
+import { createOrganizationAction, type OrganizationOnboardingState } from "./actions";
 
 export function OrganizationForm() {
-  const router = useRouter(); const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setError(null); const data = new FormData(event.currentTarget);
-    try {
-      const response = await fetch("/api/onboarding/organization", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: data.get("name"), currency: data.get("currency"), shopName: data.get("shopName"), shopCode: data.get("shopCode") }) });
-      const body = await response.json() as { code?: string }; if (!response.ok) throw new Error(body.code);
-      router.replace("/"); router.refresh();
-    } catch { setError("La création de l’organisation est momentanément impossible. Réessayez."); }
-    finally { setBusy(false); }
-  }
+  const [state, action, pending] = useActionState(createOrganizationAction, { error: null } satisfies OrganizationOnboardingState);
   return (
-    <form className="grid gap-5" onSubmit={(event) => void submit(event)}>
-      <AuthError message={error} />
+    <form action={action} className="grid gap-5">
+      <AuthError message={state.error} />
       <Field label="Nom de l’organisation" name="name" required>{({ controlId }) => <Input autoComplete="organization" autoFocus id={controlId} name="name" required />}</Field>
-      <Field description="La devise sera utilisée pour les ventes, prix et rapports." label="Devise" name="currency" required>{({ controlId, descriptionId }) => <Select defaultValue="XOF" name="currency"><SelectTrigger aria-describedby={descriptionId} id={controlId}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="XOF">Franc CFA (XOF)</SelectItem><SelectItem value="EUR">Euro (EUR)</SelectItem><SelectItem value="USD">Dollar américain (USD)</SelectItem></SelectContent></Select>}</Field>
+      <Field description="La devise sera utilisée pour les ventes, prix et rapports." label="Devise" name="currency" required>{({ controlId, descriptionId }) => <select aria-describedby={descriptionId} className="min-h-11 w-full rounded-md border border-border bg-surface px-3 text-sm text-text-primary outline-none focus:border-primary focus:ring-3 focus:ring-primary/15" defaultValue="XOF" id={controlId} name="currency" required><option value="XOF">Franc CFA (XOF)</option><option value="EUR">Euro (EUR)</option><option value="USD">Dollar américain (USD)</option></select>}</Field>
       <div className="mt-2 border-t border-border pt-5"><p className="font-semibold text-text-primary">Première boutique</p><p className="mt-1 text-sm text-text-secondary">Vous pourrez ajouter d’autres boutiques depuis l’administration.</p></div>
       <Field label="Nom de la boutique" name="shopName" required>{({ controlId }) => <Input id={controlId} name="shopName" placeholder="Centre-ville" required />}</Field>
       <Field description="Un code court et stable, par exemple CENTRE." label="Code de la boutique" name="shopCode" required>{({ controlId, descriptionId }) => <Input aria-describedby={descriptionId} id={controlId} name="shopCode" placeholder="CENTRE" required />}</Field>
-      <Button className="w-full" isLoading={busy} size="lg" type="submit">Créer l’organisation</Button>
+      <Button className="w-full" isLoading={pending} size="lg" type="submit">Créer l’organisation</Button>
       <p className="text-center text-xs leading-5 text-text-secondary">Vous deviendrez propriétaire de cette organisation.</p>
     </form>
   );
