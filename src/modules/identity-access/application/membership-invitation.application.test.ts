@@ -26,18 +26,16 @@ describe("membership invitations", () => {
   const ids = { next: () => Identifier.fromString(crypto.randomUUID()) };
   const opaque = { generate: () => "temporary-token", hash: () => "a".repeat(64) };
   const clock = { now: () => new Date("2026-09-03T08:00:00.000Z") };
-  const delivery = { send: async () => undefined };
-
   it("creates a 48-hour one-use invitation for a new account", async () => {
     const repository = new Invitations();
-    const issued = await new InviteMember(repository, delivery, ids, opaque, opaque, clock, "https://sales.example").execute({ organizationId: "org", invitedByActorId: "owner", email: " User@example.com ", displayName: "User", organizationName: "ASTU SARL" });
+    const issued = await new InviteMember(repository, ids, opaque, opaque, clock, "https://sales.example").execute({ organizationId: "org", invitedByActorId: "owner", email: " User@example.com ", displayName: "User", organizationName: "ASTU SARL" });
     expect(issued.acceptanceUrl).toContain("/invitations/temporary-token");
     expect(issued.invitation.expiresAt.toISOString()).toBe("2026-09-05T08:00:00.000Z");
   });
 
   it("sets a password and activates a new invited account", async () => {
     const repository = new Invitations();
-    await new InviteMember(repository, delivery, ids, opaque, opaque, clock, "https://sales.example").execute({ organizationId: "org", invitedByActorId: "owner", email: "user@example.com", displayName: "User", organizationName: "ASTU SARL" });
+    await new InviteMember(repository, ids, opaque, opaque, clock, "https://sales.example").execute({ organizationId: "org", invitedByActorId: "owner", email: "user@example.com", displayName: "User", organizationName: "ASTU SARL" });
     const result = await new AcceptMembershipInvitation(repository, opaque, new Passwords(), clock).execute({ token: "temporary-token", password: "phrase secrète très longue", authenticatedUserAccountId: null });
     expect(result.shouldIssueSession).toBe(true);
     expect(repository.accepted).toMatchObject({ membership: { status: "ACTIVE" }, credential: { algorithm: "test" } });
@@ -46,7 +44,7 @@ describe("membership invitations", () => {
   it("requires the invited identity to be signed in for an existing account", async () => {
     const repository = new Invitations();
     repository.account = UserAccount.create(ids.next(), "user@example.com", "User");
-    await new InviteMember(repository, delivery, ids, opaque, opaque, clock, "https://sales.example").execute({ organizationId: "org", invitedByActorId: "owner", email: "user@example.com", displayName: "Ignored", organizationName: "ASTU SARL" });
+    await new InviteMember(repository, ids, opaque, opaque, clock, "https://sales.example").execute({ organizationId: "org", invitedByActorId: "owner", email: "user@example.com", displayName: "Ignored", organizationName: "ASTU SARL" });
     await expect(new AcceptMembershipInvitation(repository, opaque, new Passwords(), clock).execute({ token: "temporary-token", password: null, authenticatedUserAccountId: "someone-else" })).rejects.toMatchObject({ code: "auth.invitation_login_required" });
   });
 });

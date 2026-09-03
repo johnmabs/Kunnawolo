@@ -23,6 +23,7 @@ export class PrismaMembershipInvitationRepository implements MembershipInvitatio
       if (input.createAccount) await transaction.userAccount.create({ data: { id: input.account.id.value, email: input.account.email, displayName: input.account.displayName } });
       await transaction.organizationMembership.create({ data: { id: input.membership.id.value, organizationId: input.membership.organizationId.value, userAccountId: input.membership.userAccountId.value, status: "INVITED", role: "CASHIER" } });
       await transaction.membershipInvitation.create({ data: { id: input.invitation.id.value, organizationId: input.invitation.organizationId.value, membershipId: input.invitation.membershipId.value, invitedByActorId: input.invitation.invitedByActorId.value, email: input.invitation.email, tokenHash: input.invitation.tokenHash, expiresAt: input.invitation.expiresAt } });
+      await transaction.invitationDeliveryOutbox.create({ data: input.delivery });
       await transaction.organizationAudit.create({ data: { id: crypto.randomUUID(), organizationId: input.invitation.organizationId.value, actorId: input.invitation.invitedByActorId.value, action: "membership.invited" } });
     });
   }
@@ -44,6 +45,7 @@ export class PrismaMembershipInvitationRepository implements MembershipInvitatio
       if (updated.count !== 1) throw new DomainError("auth.invitation_invalid", "The invitation is invalid or expired.");
       await transaction.organizationMembership.update({ where: { id: input.membership.id.value }, data: { status: "ACTIVE", activatedAt: input.invitation.acceptedAt } });
       if (input.credential !== null) await transaction.passwordCredential.create({ data: { userAccountId: input.membership.userAccountId.value, ...input.credential } });
+      await transaction.invitationDeliveryOutbox.updateMany({ where: { invitationId: input.invitation.id.value, status: { in: ["PENDING", "PROCESSING", "FAILED"] } }, data: { status: "CANCELLED", acceptanceUrl: null, lockedAt: null } });
       await transaction.organizationAudit.create({ data: { id: crypto.randomUUID(), organizationId: input.membership.organizationId.value, actorId: input.membership.userAccountId.value, action: "membership.invitation_accepted" } });
     });
   }

@@ -280,9 +280,32 @@ model MembershipInvitation {
   organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   membership        OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
   invitedBy         UserAccount @relation("InvitationSender", fields: [invitedByActorId], references: [id], onDelete: Restrict)
+  deliveryOutbox    InvitationDeliveryOutbox[]
 
   @@index([organizationId, email])
   @@index([expiresAt])
+}
+
+model InvitationDeliveryOutbox {
+  id               String   @id
+  invitationId     String
+  email            String   @db.Text
+  displayName      String   @db.Text
+  organizationName String   @db.Text
+  acceptanceUrl    String?  @db.Text
+  expiresAt        DateTime
+  status           String   @default("PENDING") @db.VarChar(16)
+  attemptCount     Int      @default(0)
+  nextAttemptAt    DateTime @default(now())
+  lockedAt         DateTime?
+  sentAt           DateTime?
+  lastErrorCode    String?  @db.VarChar(128)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  invitation       MembershipInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@index([invitationId, createdAt])
 }
 
 model ShopAssignment {

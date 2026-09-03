@@ -10,8 +10,8 @@ export function InviteMemberForm() {
     event.preventDefault(); setBusy(true); setAcceptanceUrl(null); const form = event.currentTarget; const data = new FormData(form);
     try {
       const response = await fetch("/api/administration/members/invitations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ organizationId, email: data.get("email"), displayName: data.get("displayName") }) });
-      const body = await response.json() as { code?: string; acceptanceUrl?: string; delivery?: "email" | "manual" }; if (!response.ok) throw new Error(body.code);
-      form.reset(); setAcceptanceUrl(body.acceptanceUrl ?? null); window.dispatchEvent(new Event("astu:members-changed")); toast({ title: body.delivery === "email" ? "Invitation envoyée" : "Invitation créée", description: body.delivery === "email" ? `Un email a été envoyé à ${String(data.get("email"))}.` : "Le lien est valable pendant 48 heures.", variant: "success" });
+      const body = await response.json() as { code?: string; acceptanceUrl?: string; delivery?: "email" | "manual" | "queued" | "failed" }; if (!response.ok) throw new Error(body.code);
+      const email = String(data.get("email")); form.reset(); setAcceptanceUrl(body.acceptanceUrl ?? null); window.dispatchEvent(new Event("astu:members-changed")); toast(body.delivery === "email" ? { title: "Invitation envoyée", description: `Un email a été envoyé à ${email}.`, variant: "success" } : body.delivery === "manual" ? { title: "Invitation créée", description: "Le lien est valable pendant 48 heures.", variant: "success" } : { title: "Invitation mise en attente", description: body.delivery === "failed" ? "Le premier envoi a échoué et sera retenté automatiquement." : "Elle sera envoyée dès que le service email sera disponible.", variant: "info" });
     } catch (failure) { toast({ title: "Invitation impossible", description: failure instanceof Error ? failure.message : "Erreur inattendue", variant: "error" }); }
     finally { setBusy(false); }
   }
