@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { AppShell } from "@/components/layout";
 import { createPrismaClient } from "@/infrastructure/prisma/prisma-client";
 import { queryWorkspaceSession } from "@/modules/identity-access/infrastructure/prisma-workspace-session-query";
@@ -17,7 +18,7 @@ export default async function RootLayout({
   let initialSession = null;
   if (databaseUrl) {
     const prisma = createPrismaClient(databaseUrl);
-    try { initialSession = await queryWorkspaceSession(prisma, await authenticateWebRequest(prisma)); }
+    try { initialSession = await queryWorkspaceSession(prisma, await authenticateWebRequest(prisma), (await cookies()).get("astu_organization")?.value ?? null); }
     catch { /* Public routes and expired sessions render without workspace data. */ }
     finally { await prisma.$disconnect(); }
   }
