@@ -10,6 +10,7 @@ export class PrismaInvitationDeliveryOutbox implements InvitationDeliveryOutbox 
         where: {
           ...(input.id ? { id: input.id } : {}),
           acceptanceUrl: { not: null },
+          expiresAt: { gt: input.now },
           OR: [
             { status: { in: ["PENDING", "FAILED"] }, nextAttemptAt: { lte: input.now } },
             { status: "PROCESSING", lockedAt: { lte: input.lockedBefore } },

@@ -18,6 +18,7 @@
     "db:migrate:status": "prisma migrate status",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
+    "invitations:dispatch": "sh scripts/process-invitation-deliveries.sh",
     "ops:verify-release": "sh scripts/verify-release.sh",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
