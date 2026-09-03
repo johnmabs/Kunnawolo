@@ -20,7 +20,7 @@ export function SignupForm() {
     try {
       const response = await fetch("/api/auth/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ displayName: data.get("displayName"), email: data.get("email"), password: data.get("password") }) });
       const body = await response.json() as { code?: string }; if (!response.ok) throw new Error(body.code);
-      router.replace("/onboarding"); router.refresh();
+      router.replace("/onboarding");
     } catch (failure) { setError(messageFor(failure instanceof Error ? failure.message : undefined)); }
     finally { setBusy(false); }
   }
