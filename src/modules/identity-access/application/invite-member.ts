@@ -22,7 +22,7 @@ export class InviteMember {
     const invitation = MembershipInvitation.issue({ id: this.ids.next(), organizationId: membership.organizationId, membershipId: membership.id, invitedByActorId: Identifier.fromString(input.invitedByActorId), email: account.email, tokenHash: this.tokenHasher.hash(token), issuedAt, expiresAt });
     await this.repository.create({ account, createAccount: existing === null, invitation, membership });
     const acceptanceUrl = new URL(`/invitations/${encodeURIComponent(token)}`, this.applicationUrl).toString();
-    await this.delivery.send({ email: account.email, displayName: account.displayName, organizationName: input.organizationName, acceptanceUrl, expiresAt });
+    await this.delivery.send({ email: account.email, displayName: account.displayName, organizationName: input.organizationName, acceptanceUrl, expiresAt, idempotencyKey: `membership-invitation/${invitation.id.value}` });
     return { membership, invitation, acceptanceUrl };
   }
 }

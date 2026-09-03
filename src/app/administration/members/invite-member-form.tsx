@@ -10,8 +10,8 @@ export function InviteMemberForm() {
     event.preventDefault(); setBusy(true); setAcceptanceUrl(null); const form = event.currentTarget; const data = new FormData(form);
     try {
       const response = await fetch("/api/administration/members/invitations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ organizationId, email: data.get("email"), displayName: data.get("displayName") }) });
-      const body = await response.json() as { code?: string; acceptanceUrl?: string }; if (!response.ok) throw new Error(body.code);
-      form.reset(); setAcceptanceUrl(body.acceptanceUrl ?? null); window.dispatchEvent(new Event("astu:members-changed")); toast({ title: "Invitation créée", description: "Le lien est valable pendant 48 heures.", variant: "success" });
+      const body = await response.json() as { code?: string; acceptanceUrl?: string; delivery?: "email" | "manual" }; if (!response.ok) throw new Error(body.code);
+      form.reset(); setAcceptanceUrl(body.acceptanceUrl ?? null); window.dispatchEvent(new Event("astu:members-changed")); toast({ title: body.delivery === "email" ? "Invitation envoyée" : "Invitation créée", description: body.delivery === "email" ? `Un email a été envoyé à ${String(data.get("email"))}.` : "Le lien est valable pendant 48 heures.", variant: "success" });
     } catch (failure) { toast({ title: "Invitation impossible", description: failure instanceof Error ? failure.message : "Erreur inattendue", variant: "error" }); }
     finally { setBusy(false); }
   }
