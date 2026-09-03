@@ -18,13 +18,23 @@ export default async function RootLayout({
   let initialSession = null;
   if (databaseUrl) {
     const prisma = createPrismaClient(databaseUrl);
-    try { initialSession = await queryWorkspaceSession(prisma, await authenticateWebRequest(prisma), (await cookies()).get("astu_organization")?.value ?? null); }
-    catch { /* Public routes and expired sessions render without workspace data. */ }
-    finally { await prisma.$disconnect(); }
+    try {
+      initialSession = await queryWorkspaceSession(
+        prisma,
+        await authenticateWebRequest(prisma),
+        (await cookies()).get("astu_organization")?.value ?? null,
+      );
+    } catch {
+      /* Public routes and expired sessions render without workspace data. */
+    } finally {
+      await prisma.$disconnect();
+    }
   }
   return (
     <html lang="fr">
-      <body><AppShell initialSession={initialSession}>{children}</AppShell></body>
+      <body>
+        <AppShell initialSession={initialSession}>{children}</AppShell>
+      </body>
     </html>
   );
 }

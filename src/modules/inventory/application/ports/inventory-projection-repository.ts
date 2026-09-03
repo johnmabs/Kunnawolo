@@ -4,8 +4,23 @@ import type { StockLossHistoryProjection } from "../../domain/stock-loss-history
 import type { StockMovementHistoryProjection } from "../../domain/stock-movement-history-projection";
 
 export interface InventoryProjectionRepository {
-  listStock(organizationId: string, shopId: string, productSearch: string | null): Promise<StockListProjection | null>;
-  listSessions(organizationId: string, shopId: string): Promise<InventorySessionListProjection | null>;
-  listMovements(organizationId: string, shopId: string, productId: string): Promise<StockMovementHistoryProjection | null>;
-  listLosses(organizationId: string, shopId: string, productId: string | null): Promise<StockLossHistoryProjection | null>;
+  listStock(
+    organizationId: string,
+    shopId: string,
+    productSearch: string | null,
+  ): Promise<StockListProjection | null>;
+  listSessions(
+    organizationId: string,
+    shopId: string,
+  ): Promise<InventorySessionListProjection | null>;
+  listMovements(
+    organizationId: string,
+    shopId: string,
+    productId: string,
+  ): Promise<StockMovementHistoryProjection | null>;
+  listLosses(
+    organizationId: string,
+    shopId: string,
+    productId: string | null,
+  ): Promise<StockLossHistoryProjection | null>;
 }

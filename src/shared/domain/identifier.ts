@@ -5,7 +5,10 @@ export class Identifier {
 
   public static fromString(value: string): Identifier {
     if (value.trim().length === 0 || value !== value.trim()) {
-      throw new DomainError("shared.invalid_identifier", "An identifier must be non-empty and trimmed.");
+      throw new DomainError(
+        "shared.invalid_identifier",
+        "An identifier must be non-empty and trimmed.",
+      );
     }
 
     return new Identifier(value);

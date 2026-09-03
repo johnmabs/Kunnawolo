@@ -4,13 +4,25 @@ import type { OrganizationOnboardingRepository } from "../application/ports/orga
 export class PrismaOrganizationOnboardingRepository implements OrganizationOnboardingRepository {
   public constructor(private readonly prisma: PrismaClient) {}
 
-  public async createWithOwner(input: Parameters<OrganizationOnboardingRepository["createWithOwner"]>[0]): Promise<void> {
+  public async createWithOwner(
+    input: Parameters<OrganizationOnboardingRepository["createWithOwner"]>[0],
+  ): Promise<void> {
     await this.prisma.$transaction(async (transaction) => {
       await transaction.organization.create({
-        data: { id: input.organization.id.value, name: input.organization.name, currency: input.organization.currency },
+        data: {
+          id: input.organization.id.value,
+          name: input.organization.name,
+          currency: input.organization.currency,
+        },
       });
       await transaction.shop.create({
-        data: { id: input.initialShop.id.value, organizationId: input.organization.id.value, code: input.initialShop.code, name: input.initialShop.name, isActive: true },
+        data: {
+          id: input.initialShop.id.value,
+          organizationId: input.organization.id.value,
+          code: input.initialShop.code,
+          name: input.initialShop.name,
+          isActive: true,
+        },
       });
       await transaction.organizationMembership.create({
         data: {
@@ -31,7 +43,12 @@ export class PrismaOrganizationOnboardingRepository implements OrganizationOnboa
         },
       });
       await transaction.organizationAudit.create({
-        data: { id: crypto.randomUUID(), organizationId: input.organization.id.value, actorId: input.ownerUserAccountId, action: "shop.created" },
+        data: {
+          id: crypto.randomUUID(),
+          organizationId: input.organization.id.value,
+          actorId: input.ownerUserAccountId,
+          action: "shop.created",
+        },
       });
     });
   }

@@ -1,3 +1,7 @@
 export interface TransfersReceptionAuthorization {
-  authorize(organizationId: string, destinationShopId: string, actorId: string | null): Promise<void>;
+  authorize(
+    organizationId: string,
+    destinationShopId: string,
+    actorId: string | null,
+  ): Promise<void>;
 }

@@ -29,18 +29,75 @@ export class Product {
     public readonly trackInventory: boolean,
   ) {}
 
-  public static create(id: Identifier, organizationId: Identifier, details: ProductDetails): Product {
+  public static create(
+    id: Identifier,
+    organizationId: Identifier,
+    details: ProductDetails,
+  ): Product {
     const name = details.name.trim().normalize("NFC");
-    if (name.length === 0) throw new DomainError("catalog.invalid_product_name", "A product name must be non-empty.");
-    return new Product(id, organizationId, name, normalizeOptional(details.code), normalizeOptional(details.barcode), normalizeOptional(details.packaging), normalizeOptional(details.form), true, details.trackInventory ?? true);
+    if (name.length === 0)
+      throw new DomainError(
+        "catalog.invalid_product_name",
+        "A product name must be non-empty.",
+      );
+    return new Product(
+      id,
+      organizationId,
+      name,
+      normalizeOptional(details.code),
+      normalizeOptional(details.barcode),
+      normalizeOptional(details.packaging),
+      normalizeOptional(details.form),
+      true,
+      details.trackInventory ?? true,
+    );
   }
 
   public revise(details: ProductDetails): Product {
-    const revised = Product.create(this.id, this.organizationId, { ...details, trackInventory: details.trackInventory ?? this.trackInventory });
+    const revised = Product.create(this.id, this.organizationId, {
+      ...details,
+      trackInventory: details.trackInventory ?? this.trackInventory,
+    });
     return this.isActive ? revised : revised.deactivate();
   }
 
-  public activate(): Product { return new Product(this.id, this.organizationId, this.name, this.code, this.barcode, this.packaging, this.form, true, this.trackInventory); }
-  public deactivate(): Product { return new Product(this.id, this.organizationId, this.name, this.code, this.barcode, this.packaging, this.form, false, this.trackInventory); }
-  public changeInventoryTracking(trackInventory: boolean): Product { return new Product(this.id, this.organizationId, this.name, this.code, this.barcode, this.packaging, this.form, this.isActive, trackInventory); }
+  public activate(): Product {
+    return new Product(
+      this.id,
+      this.organizationId,
+      this.name,
+      this.code,
+      this.barcode,
+      this.packaging,
+      this.form,
+      true,
+      this.trackInventory,
+    );
+  }
+  public deactivate(): Product {
+    return new Product(
+      this.id,
+      this.organizationId,
+      this.name,
+      this.code,
+      this.barcode,
+      this.packaging,
+      this.form,
+      false,
+      this.trackInventory,
+    );
+  }
+  public changeInventoryTracking(trackInventory: boolean): Product {
+    return new Product(
+      this.id,
+      this.organizationId,
+      this.name,
+      this.code,
+      this.barcode,
+      this.packaging,
+      this.form,
+      this.isActive,
+      trackInventory,
+    );
+  }
 }

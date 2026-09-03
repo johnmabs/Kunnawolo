@@ -10,7 +10,11 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
   public async save(organization: Organization): Promise<void> {
     await this.prisma.organization.upsert({
       where: { id: organization.id.value },
-      create: { id: organization.id.value, name: organization.name, currency: organization.currency },
+      create: {
+        id: organization.id.value,
+        name: organization.name,
+        currency: organization.currency,
+      },
       update: { name: organization.name, currency: organization.currency },
     });
   }
@@ -19,6 +23,9 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
     const record = await this.prisma.organization.findUnique({ where: { id } });
     return record === null
       ? null
-      : Organization.create(Identifier.fromString(record.id), { name: record.name, currency: record.currency });
+      : Organization.create(Identifier.fromString(record.id), {
+          name: record.name,
+          currency: record.currency,
+        });
   }
 }

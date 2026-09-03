@@ -1,4 +1,7 @@
-export type InventoryAccess = Readonly<{ organizationId: string; shopId: string }>;
+export type InventoryAccess = Readonly<{
+  organizationId: string;
+  shopId: string;
+}>;
 
 export type StockItem = Readonly<{
   barcode: string | null;
@@ -11,7 +14,11 @@ export type StockItem = Readonly<{
   stockLevelId: string;
 }>;
 
-export type StockList = Readonly<{ items: readonly StockItem[]; shopId: string; shopName: string }>;
+export type StockList = Readonly<{
+  items: readonly StockItem[];
+  shopId: string;
+  shopName: string;
+}>;
 
 export type StockDetail = Readonly<{
   currency: string;
@@ -36,8 +43,15 @@ export type InventorySessionItem = Readonly<{
   totalLineCount: number;
 }>;
 
-export type InventorySessionList = Readonly<{ items: readonly InventorySessionItem[]; shopId: string; shopName: string }>;
+export type InventorySessionList = Readonly<{
+  items: readonly InventorySessionItem[];
+  shopId: string;
+  shopName: string;
+}>;
 
 export class InventoryApiError extends Error {
-  public constructor(public readonly code: string) { super(code); this.name = "InventoryApiError"; }
+  public constructor(public readonly code: string) {
+    super(code);
+    this.name = "InventoryApiError";
+  }
 }

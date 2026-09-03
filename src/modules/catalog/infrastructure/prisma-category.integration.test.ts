@@ -4,8 +4,36 @@ import { createPrismaClient } from "@/infrastructure/prisma/prisma-client";
 import { PrismaCategoryRepository } from "./prisma-category-repository";
 import { Category } from "../domain/category";
 import { Identifier } from "@/shared/domain/identifier";
-const url = process.env.DATABASE_URL; if (url === undefined) throw new Error("DATABASE_URL is required.");
-const prisma = createPrismaClient(url); const organizationId = "category-test-org"; const categoryId = "category-test-id";
-beforeAll(async () => { await prisma.organization.upsert({ where: { id: organizationId }, create: { id: organizationId, name: "Catalogue", currency: "XOF" }, update: {} }); });
-afterAll(async () => { await prisma.category.deleteMany({ where: { id: categoryId } }); await prisma.organization.deleteMany({ where: { id: organizationId } }); await prisma.$disconnect(); });
-describe("PrismaCategoryRepository", () => { it("persists Unicode data in its organization", async () => { const repository = new PrismaCategoryRepository(prisma); await repository.save(Category.create(Identifier.fromString(categoryId), Identifier.fromString(organizationId), "  Fɔ́lɔ  ")); await expect(repository.findById(categoryId)).resolves.toMatchObject({ organizationId: Identifier.fromString(organizationId), name: "Fɔ́lɔ".normalize("NFC") }); }); });
+const url = process.env.DATABASE_URL;
+if (url === undefined) throw new Error("DATABASE_URL is required.");
+const prisma = createPrismaClient(url);
+const organizationId = "category-test-org";
+const categoryId = "category-test-id";
+beforeAll(async () => {
+  await prisma.organization.upsert({
+    where: { id: organizationId },
+    create: { id: organizationId, name: "Catalogue", currency: "XOF" },
+    update: {},
+  });
+});
+afterAll(async () => {
+  await prisma.category.deleteMany({ where: { id: categoryId } });
+  await prisma.organization.deleteMany({ where: { id: organizationId } });
+  await prisma.$disconnect();
+});
+describe("PrismaCategoryRepository", () => {
+  it("persists Unicode data in its organization", async () => {
+    const repository = new PrismaCategoryRepository(prisma);
+    await repository.save(
+      Category.create(
+        Identifier.fromString(categoryId),
+        Identifier.fromString(organizationId),
+        "  Fɔ́lɔ  ",
+      ),
+    );
+    await expect(repository.findById(categoryId)).resolves.toMatchObject({
+      organizationId: Identifier.fromString(organizationId),
+      name: "Fɔ́lɔ".normalize("NFC"),
+    });
+  });
+});

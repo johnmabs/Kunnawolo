@@ -19,12 +19,35 @@ export class ViewDashboard {
     losses: ValuedLossReportingSource,
     private readonly authorization: ReportingReadAuthorization,
   ) {
-    this.dashboard = new ProjectDashboard(sales, inventory, transfers, expenses, losses);
+    this.dashboard = new ProjectDashboard(
+      sales,
+      inventory,
+      transfers,
+      expenses,
+      losses,
+    );
   }
 
-  public async execute(input: Readonly<{ organizationId: string; shopId?: string | null; occurredFrom?: Date | null; occurredTo?: Date | null; actorId: string | null }>): Promise<Dashboard> {
+  public async execute(
+    input: Readonly<{
+      organizationId: string;
+      shopId?: string | null;
+      occurredFrom?: Date | null;
+      occurredTo?: Date | null;
+      actorId: string | null;
+    }>,
+  ): Promise<Dashboard> {
     const filter = DashboardFilter.create(input);
-    await this.authorization.authorize(filter.organizationId.value, filter.shopId?.value ?? null, input.actorId);
-    return this.dashboard.execute({ organizationId: filter.organizationId.value, shopId: filter.shopId?.value ?? null, occurredFrom: filter.occurredFrom, occurredTo: filter.occurredTo });
+    await this.authorization.authorize(
+      filter.organizationId.value,
+      filter.shopId?.value ?? null,
+      input.actorId,
+    );
+    return this.dashboard.execute({
+      organizationId: filter.organizationId.value,
+      shopId: filter.shopId?.value ?? null,
+      occurredFrom: filter.occurredFrom,
+      occurredTo: filter.occurredTo,
+    });
   }
 }

@@ -13,14 +13,29 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const search = new URL(request.url).searchParams;
   const organizationId = search.get("organizationId")?.trim();
-  if (!organizationId) return NextResponse.json({ code: "catalog.invalid_product_search" }, { status: 400 });
+  if (!organizationId)
+    return NextResponse.json(
+      { code: "catalog.invalid_product_search" },
+      { status: 400 },
+    );
   const databaseUrl = process.env.DATABASE_URL;
-  if (databaseUrl === undefined) return NextResponse.json({ code: "catalog.unavailable" }, { status: 503 });
+  if (databaseUrl === undefined)
+    return NextResponse.json({ code: "catalog.unavailable" }, { status: 503 });
   const prisma = createPrismaClient(databaseUrl);
 
   try {
-    await authenticateApiRequest(prisma, request.headers.get("authorization"), organizationId);
-    const products = await new SearchProducts(new PrismaProductRepository(prisma)).execute({ organizationId, query: search.get("query") ?? "", includeInactive: search.get("includeInactive") === "true" });
+    await authenticateApiRequest(
+      prisma,
+      request.headers.get("authorization"),
+      organizationId,
+    );
+    const products = await new SearchProducts(
+      new PrismaProductRepository(prisma),
+    ).execute({
+      organizationId,
+      query: search.get("query") ?? "",
+      includeInactive: search.get("includeInactive") === "true",
+    });
     return NextResponse.json({
       items: products.map(productDto),
       pricingAvailable: false,
@@ -32,18 +47,38 @@ export async function GET(request: Request) {
   }
 }
 
-type CreateProductRequest = Readonly<{ organizationId?: string; name?: string; code?: string | null; barcode?: string | null; packaging?: string | null; form?: string | null; trackInventory?: boolean }>;
+type CreateProductRequest = Readonly<{
+  organizationId?: string;
+  name?: string;
+  code?: string | null;
+  barcode?: string | null;
+  packaging?: string | null;
+  form?: string | null;
+  trackInventory?: boolean;
+}>;
 
 export async function POST(request: Request) {
-  const input = await request.json() as CreateProductRequest;
+  const input = (await request.json()) as CreateProductRequest;
   const organizationId = input.organizationId?.trim();
-  if (!organizationId || typeof input.name !== "string") return NextResponse.json({ code: "catalog.invalid_product_request" }, { status: 400 });
+  if (!organizationId || typeof input.name !== "string")
+    return NextResponse.json(
+      { code: "catalog.invalid_product_request" },
+      { status: 400 },
+    );
   const databaseUrl = process.env.DATABASE_URL;
-  if (databaseUrl === undefined) return NextResponse.json({ code: "catalog.unavailable" }, { status: 503 });
+  if (databaseUrl === undefined)
+    return NextResponse.json({ code: "catalog.unavailable" }, { status: 503 });
   const prisma = createPrismaClient(databaseUrl);
   try {
-    const access = await authenticateApiRequest(prisma, request.headers.get("authorization"), organizationId);
-    const product = await new CreateProduct(new PrismaProductRepository(prisma), new UuidIdentifierGenerator()).execute({
+    const access = await authenticateApiRequest(
+      prisma,
+      request.headers.get("authorization"),
+      organizationId,
+    );
+    const product = await new CreateProduct(
+      new PrismaProductRepository(prisma),
+      new UuidIdentifierGenerator(),
+    ).execute({
       organizationId,
       actorId: access.actorId,
       name: input.name,

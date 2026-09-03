@@ -7,4 +7,8 @@ const messages: Readonly<Record<string, string>> = {
   "catalog.product_pricing_not_found": "Aucun prix n’a encore été défini.",
   "security.invalid_api_key": "La clé d’accès est invalide ou révoquée.",
 };
-export function catalogErrorMessage(error: unknown) { return error instanceof CatalogApiError ? messages[error.code] ?? `Une erreur est survenue (${error.code}).` : "Une erreur inattendue est survenue."; }
+export function catalogErrorMessage(error: unknown) {
+  return error instanceof CatalogApiError
+    ? (messages[error.code] ?? `Une erreur est survenue (${error.code}).`)
+    : "Une erreur inattendue est survenue.";
+}

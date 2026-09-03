@@ -1,2 +1,4 @@
 import type { StockMovement } from "../../domain/stock-movement";
-export interface StockMovementRepository { apply(movement: StockMovement): Promise<void>; }
+export interface StockMovementRepository {
+  apply(movement: StockMovement): Promise<void>;
+}

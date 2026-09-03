@@ -15,18 +15,55 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   const databaseUrl = process.env.DATABASE_URL;
-  if (databaseUrl === undefined) return NextResponse.json({ code: "auth.unavailable" }, { status: 503 });
+  if (databaseUrl === undefined)
+    return NextResponse.json({ code: "auth.unavailable" }, { status: 503 });
   const prisma = createPrismaClient(databaseUrl);
   try {
     assertTrustedOrigin(request);
-    const input = await request.json() as { email?: unknown; displayName?: unknown; password?: unknown };
-    if (typeof input.email !== "string" || typeof input.displayName !== "string" || typeof input.password !== "string") return NextResponse.json({ code: "auth.invalid_request" }, { status: 400 });
+    const input = (await request.json()) as {
+      email?: unknown;
+      displayName?: unknown;
+      password?: unknown;
+    };
+    if (
+      typeof input.email !== "string" ||
+      typeof input.displayName !== "string" ||
+      typeof input.password !== "string"
+    )
+      return NextResponse.json(
+        { code: "auth.invalid_request" },
+        { status: 400 },
+      );
     const repository = new PrismaWebAuthenticationRepository(prisma);
-    const account = await new RegisterWithPassword(repository, new NodePasswordHasher(), new UuidIdentifierGenerator()).execute(input as { email: string; displayName: string; password: string });
+    const account = await new RegisterWithPassword(
+      repository,
+      new NodePasswordHasher(),
+      new UuidIdentifierGenerator(),
+    ).execute(
+      input as { email: string; displayName: string; password: string },
+    );
     const opaqueTokens = new NodeOpaqueToken();
-    const session = await new IssueWebSession(repository, new UuidIdentifierGenerator(), opaqueTokens, opaqueTokens, new SystemClock()).execute(account.id.value);
+    const session = await new IssueWebSession(
+      repository,
+      new UuidIdentifierGenerator(),
+      opaqueTokens,
+      opaqueTokens,
+      new SystemClock(),
+    ).execute(account.id.value);
     await writeSessionCookie(session.token, session.expiresAt);
-    return NextResponse.json({ account: { id: account.id.value, email: account.email, displayName: account.displayName } }, { status: 201 });
-  } catch (error) { return apiErrorResponse(error, "auth.registration_failed"); }
-  finally { await prisma.$disconnect(); }
+    return NextResponse.json(
+      {
+        account: {
+          id: account.id.value,
+          email: account.email,
+          displayName: account.displayName,
+        },
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    return apiErrorResponse(error, "auth.registration_failed");
+  } finally {
+    await prisma.$disconnect();
+  }
 }

@@ -20,15 +20,43 @@ export class StockListProjection {
     public readonly items: readonly StockListItem[],
   ) {}
 
-  public static create(input: Readonly<{ organizationId: string; shopId: string; shopName: string; items: readonly Omit<StockListItem, "isLowStock">[] }>): StockListProjection {
+  public static create(
+    input: Readonly<{
+      organizationId: string;
+      shopId: string;
+      shopName: string;
+      items: readonly Omit<StockListItem, "isLowStock">[];
+    }>,
+  ): StockListProjection {
     const shopName = input.shopName.trim().normalize("NFC");
-    if (shopName.length === 0) throw new DomainError("inventory.invalid_shop_name", "A stock projection requires a shop name.");
+    if (shopName.length === 0)
+      throw new DomainError(
+        "inventory.invalid_shop_name",
+        "A stock projection requires a shop name.",
+      );
     const items = input.items.map((item) => {
-      if (!Number.isFinite(item.quantity) || !Number.isFinite(item.lowStockThreshold) || item.lowStockThreshold < 0) {
-        throw new DomainError("inventory.invalid_stock_projection", "Stock quantities and thresholds must be finite and thresholds cannot be negative.");
+      if (
+        !Number.isFinite(item.quantity) ||
+        !Number.isFinite(item.lowStockThreshold) ||
+        item.lowStockThreshold < 0
+      ) {
+        throw new DomainError(
+          "inventory.invalid_stock_projection",
+          "Stock quantities and thresholds must be finite and thresholds cannot be negative.",
+        );
       }
-      return { ...item, productName: item.productName.normalize("NFC"), isLowStock: item.lowStockThreshold > 0 && item.quantity <= item.lowStockThreshold };
+      return {
+        ...item,
+        productName: item.productName.normalize("NFC"),
+        isLowStock:
+          item.lowStockThreshold > 0 && item.quantity <= item.lowStockThreshold,
+      };
     });
-    return new StockListProjection(Identifier.fromString(input.organizationId), Identifier.fromString(input.shopId), shopName, items);
+    return new StockListProjection(
+      Identifier.fromString(input.organizationId),
+      Identifier.fromString(input.shopId),
+      shopName,
+      items,
+    );
   }
 }

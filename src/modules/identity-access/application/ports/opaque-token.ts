@@ -1,2 +1,6 @@
-export interface OpaqueTokenGenerator { generate(): string; }
-export interface OpaqueTokenHasher { hash(token: string): string; }
+export interface OpaqueTokenGenerator {
+  generate(): string;
+}
+export interface OpaqueTokenHasher {
+  hash(token: string): string;
+}

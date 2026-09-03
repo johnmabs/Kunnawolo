@@ -17,7 +17,17 @@ describe("Organization", () => {
   });
 
   it("rejects an empty name and an invalid currency", () => {
-    expect(() => Organization.create(Identifier.fromString("org-1"), { name: " ", currency: "XOF" })).toThrow(DomainError);
-    expect(() => Organization.create(Identifier.fromString("org-1"), { name: "Kunnawolo", currency: "xof" })).toThrow(DomainError);
+    expect(() =>
+      Organization.create(Identifier.fromString("org-1"), {
+        name: " ",
+        currency: "XOF",
+      }),
+    ).toThrow(DomainError);
+    expect(() =>
+      Organization.create(Identifier.fromString("org-1"), {
+        name: "Kunnawolo",
+        currency: "xof",
+      }),
+    ).toThrow(DomainError);
   });
 });

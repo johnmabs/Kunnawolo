@@ -10,11 +10,19 @@ export class Shop {
     public readonly isActive: boolean,
   ) {}
 
-  public static create(id: Identifier, organizationId: Identifier, code: string, name: string): Shop {
+  public static create(
+    id: Identifier,
+    organizationId: Identifier,
+    code: string,
+    name: string,
+  ): Shop {
     const normalizedName = name.trim().normalize("NFC");
     const normalizedCode = code.trim().normalize("NFC");
     if (normalizedName.length === 0 || normalizedCode.length === 0) {
-      throw new DomainError("shop.invalid_details", "A shop name and code must be non-empty.");
+      throw new DomainError(
+        "shop.invalid_details",
+        "A shop name and code must be non-empty.",
+      );
     }
     return new Shop(id, organizationId, normalizedCode, normalizedName, true);
   }

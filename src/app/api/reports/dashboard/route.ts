@@ -15,19 +15,32 @@ import { authenticateApiRequest } from "../../_shared/api-access";
 
 export const dynamic = "force-dynamic";
 
-const toDate = (value: string | null): Date | null => value === null ? null : new Date(value);
+const toDate = (value: string | null): Date | null =>
+  value === null ? null : new Date(value);
 
 export async function GET(request: Request) {
   const search = new URL(request.url).searchParams;
   const organizationId = search.get("organizationId");
-  if (organizationId === null) return NextResponse.json({ code: "reporting.invalid_dashboard_request" }, { status: 400 });
+  if (organizationId === null)
+    return NextResponse.json(
+      { code: "reporting.invalid_dashboard_request" },
+      { status: 400 },
+    );
   const databaseUrl = process.env.DATABASE_URL;
-  if (databaseUrl === undefined) return NextResponse.json({ code: "reporting.unavailable" }, { status: 503 });
+  if (databaseUrl === undefined)
+    return NextResponse.json(
+      { code: "reporting.unavailable" },
+      { status: 503 },
+    );
   const prisma = createPrismaClient(databaseUrl);
   const startedAt = Date.now();
   const correlationId = crypto.randomUUID();
   try {
-    const access = await authenticateApiRequest(prisma, request.headers.get("authorization"), organizationId);
+    const access = await authenticateApiRequest(
+      prisma,
+      request.headers.get("authorization"),
+      organizationId,
+    );
     const dashboard = await new ViewDashboard(
       new PrismaSalesReportingSource(prisma),
       new PrismaInventoryReportingSource(prisma),
@@ -35,12 +48,36 @@ export async function GET(request: Request) {
       new PrismaExpensesReportingSource(prisma),
       new PrismaValuedLossReportingSource(prisma),
       new PrismaReportingReadAuthorization(prisma),
-    ).execute({ organizationId, actorId: access.actorId, shopId: search.get("shopId"), occurredFrom: toDate(search.get("occurredFrom")), occurredTo: toDate(search.get("occurredTo")) });
-    await new ObserveOperation(new PrismaOperationalObservabilityRepository(prisma), new ConsoleOperationalLogger(), new SystemClock()).execute({ organizationId, shopId: search.get("shopId"), actorId: access.actorId, action: "report.dashboard_viewed", reference: correlationId, correlationId, durationMillis: Date.now() - startedAt });
+    ).execute({
+      organizationId,
+      actorId: access.actorId,
+      shopId: search.get("shopId"),
+      occurredFrom: toDate(search.get("occurredFrom")),
+      occurredTo: toDate(search.get("occurredTo")),
+    });
+    await new ObserveOperation(
+      new PrismaOperationalObservabilityRepository(prisma),
+      new ConsoleOperationalLogger(),
+      new SystemClock(),
+    ).execute({
+      organizationId,
+      shopId: search.get("shopId"),
+      actorId: access.actorId,
+      action: "report.dashboard_viewed",
+      reference: correlationId,
+      correlationId,
+      durationMillis: Date.now() - startedAt,
+    });
     return NextResponse.json(dashboard);
   } catch (error) {
-    const code = error instanceof Error && "code" in error ? String(error.code) : "reporting.dashboard_failed";
-    return NextResponse.json({ code }, { status: code.startsWith("security.") ? 401 : 400 });
+    const code =
+      error instanceof Error && "code" in error
+        ? String(error.code)
+        : "reporting.dashboard_failed";
+    return NextResponse.json(
+      { code },
+      { status: code.startsWith("security.") ? 401 : 400 },
+    );
   } finally {
     await prisma.$disconnect();
   }

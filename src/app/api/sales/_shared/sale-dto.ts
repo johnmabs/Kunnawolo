@@ -1,4 +1,8 @@
-import type { SaleCart, SaleFinalization, SaleLine } from "@/modules/sales/domain/sale-cart";
+import type {
+  SaleCart,
+  SaleFinalization,
+  SaleLine,
+} from "@/modules/sales/domain/sale-cart";
 import type { SalePayment } from "@/modules/sales/domain/sale-payment";
 
 function toLineDto(line: SaleLine) {
@@ -7,7 +11,9 @@ function toLineDto(line: SaleLine) {
     discountMinor: line.discount.amountMinor,
     id: line.id.value,
     isBelowCost: line.isBelowCost(),
-    lineTotalMinor: line.unitPrice.amountMinor * line.quantity.value - line.discount.amountMinor,
+    lineTotalMinor:
+      line.unitPrice.amountMinor * line.quantity.value -
+      line.discount.amountMinor,
     productId: line.productId.value,
     productName: line.productNameSnapshot,
     quantity: line.quantity.value,
@@ -17,17 +23,36 @@ function toLineDto(line: SaleLine) {
 }
 
 function totals(lines: readonly SaleLine[]) {
-  const subtotalMinor = lines.reduce((total, line) => total + line.unitPrice.amountMinor * line.quantity.value, 0);
-  const discountMinor = lines.reduce((total, line) => total + line.discount.amountMinor, 0);
-  return { discountMinor, subtotalMinor, totalMinor: subtotalMinor - discountMinor };
+  const subtotalMinor = lines.reduce(
+    (total, line) => total + line.unitPrice.amountMinor * line.quantity.value,
+    0,
+  );
+  const discountMinor = lines.reduce(
+    (total, line) => total + line.discount.amountMinor,
+    0,
+  );
+  return {
+    discountMinor,
+    subtotalMinor,
+    totalMinor: subtotalMinor - discountMinor,
+  };
 }
 
 export function toSaleCartDto(cart: SaleCart) {
-  return { id: cart.id.value, shopId: cart.shopId.value, lines: cart.lines.map(toLineDto), ...totals(cart.lines) };
+  return {
+    id: cart.id.value,
+    shopId: cart.shopId.value,
+    lines: cart.lines.map(toLineDto),
+    ...totals(cart.lines),
+  };
 }
 
 export function toSaleFinalizationDto(finalization: SaleFinalization) {
-  return { cartId: finalization.cartId.value, lines: finalization.lines.map(toLineDto), ...totals(finalization.lines) };
+  return {
+    cartId: finalization.cartId.value,
+    lines: finalization.lines.map(toLineDto),
+    ...totals(finalization.lines),
+  };
 }
 
 export function toSalePaymentDto(payment: SalePayment) {

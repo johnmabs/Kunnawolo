@@ -1,18 +1,236 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { Badge, Button, Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, ErrorState, SectionHeader, Skeleton, useToast } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  ErrorState,
+  SectionHeader,
+  Skeleton,
+  useToast,
+} from "@/components/ui";
 import { formatMoney } from "@/lib/format-money";
 import { definePricing, getProduct, setProductActive } from "./catalog-api";
 import { catalogErrorMessage } from "./error-messages";
 import { PricingDialog } from "./pricing-dialog";
 import type { CatalogAccess, ProductDetail } from "./types";
 
-export function ProductDetailDrawer({ access, onChanged, onOpenChange, productId }: Readonly<{ access: CatalogAccess; onChanged: () => void; onOpenChange: (open: boolean) => void; productId: string }>) {
-  const { toast } = useToast(); const [detail, setDetail] = useState<ProductDetail | null>(null); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); const [busy, setBusy] = useState(false); const [pricingOpen, setPricingOpen] = useState(false);
-  const load = useCallback(async () => { setLoading(true); setError(null); try { setDetail(await getProduct(access, productId)); } catch (failure) { setError(catalogErrorMessage(failure)); } finally { setLoading(false); } }, [access, productId]);
-  useEffect(() => { let active = true; void getProduct(access, productId).then((value) => { if (active) setDetail(value); }).catch((failure: unknown) => { if (active) setError(catalogErrorMessage(failure)); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, [access, productId]);
-  async function lifecycle() { if (!detail) return; setBusy(true); try { await setProductActive(access, productId, !detail.isActive); await load(); onChanged(); toast({ title: detail.isActive ? "Produit désactivé" : "Produit activé", variant: "success" }); } catch (failure) { toast({ title: "Action impossible", description: catalogErrorMessage(failure), variant: "error" }); } finally { setBusy(false); } }
-  async function pricing(input: { referenceCostMinor: number; salePriceMinor: number; reference: string }) { if (!detail) return; setBusy(true); try { await definePricing(access, productId, { ...input, currency: detail.pricing.currency }); setPricingOpen(false); await load(); onChanged(); toast({ title: "Nouveau prix défini", variant: "success" }); } catch (failure) { toast({ title: "Tarification impossible", description: catalogErrorMessage(failure), variant: "error" }); } finally { setBusy(false); } }
+export function ProductDetailDrawer({
+  access,
+  onChanged,
+  onOpenChange,
+  productId,
+}: Readonly<{
+  access: CatalogAccess;
+  onChanged: () => void;
+  onOpenChange: (open: boolean) => void;
+  productId: string;
+}>) {
+  const { toast } = useToast();
+  const [detail, setDetail] = useState<ProductDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setDetail(await getProduct(access, productId));
+    } catch (failure) {
+      setError(catalogErrorMessage(failure));
+    } finally {
+      setLoading(false);
+    }
+  }, [access, productId]);
+  useEffect(() => {
+    let active = true;
+    void getProduct(access, productId)
+      .then((value) => {
+        if (active) setDetail(value);
+      })
+      .catch((failure: unknown) => {
+        if (active) setError(catalogErrorMessage(failure));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [access, productId]);
+  async function lifecycle() {
+    if (!detail) return;
+    setBusy(true);
+    try {
+      await setProductActive(access, productId, !detail.isActive);
+      await load();
+      onChanged();
+      toast({
+        title: detail.isActive ? "Produit désactivé" : "Produit activé",
+        variant: "success",
+      });
+    } catch (failure) {
+      toast({
+        title: "Action impossible",
+        description: catalogErrorMessage(failure),
+        variant: "error",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function pricing(input: {
+    referenceCostMinor: number;
+    salePriceMinor: number;
+    reference: string;
+  }) {
+    if (!detail) return;
+    setBusy(true);
+    try {
+      await definePricing(access, productId, {
+        ...input,
+        currency: detail.pricing.currency,
+      });
+      setPricingOpen(false);
+      await load();
+      onChanged();
+      toast({ title: "Nouveau prix défini", variant: "success" });
+    } catch (failure) {
+      toast({
+        title: "Tarification impossible",
+        description: catalogErrorMessage(failure),
+        variant: "error",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
   const value = (item: string | null) => item ?? "—";
-  return <Drawer onOpenChange={onOpenChange} open><DrawerContent className="w-[min(34rem,calc(100%-1rem))]">{loading ? <div className="grid gap-4 pt-12"><Skeleton className="h-8" /><Skeleton className="h-40" /><Skeleton className="h-32" /></div> : null}{!loading && error ? <div className="pt-12"><ErrorState description={error} onRetry={() => void load()} /></div> : null}{!loading && detail ? <><DrawerHeader><DrawerTitle>{detail.name}</DrawerTitle><DrawerDescription>{detail.code ?? "Sans code produit"}</DrawerDescription></DrawerHeader><div className="mt-8 grid gap-8"><section><SectionHeader title="Informations" /><dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm"><dt className="text-text-secondary">Nom</dt><dd>{detail.name}</dd><dt className="text-text-secondary">Code</dt><dd>{value(detail.code)}</dd><dt className="text-text-secondary">Code-barres</dt><dd>{value(detail.barcode)}</dd><dt className="text-text-secondary">Conditionnement</dt><dd>{value(detail.packaging)}</dd><dt className="text-text-secondary">Forme</dt><dd>{value(detail.form)}</dd></dl></section><section><SectionHeader title="Tarification" /><div className="mt-3 rounded-lg border border-border p-4">{detail.pricing.current ? <dl className="grid grid-cols-2 gap-3 text-sm"><dt className="text-text-secondary">Coût de référence</dt><dd className="text-right font-medium">{formatMoney(detail.pricing.current.referenceCostMinor, detail.pricing.currency)}</dd><dt className="text-text-secondary">Prix de vente</dt><dd className="text-right font-semibold">{formatMoney(detail.pricing.current.salePriceMinor, detail.pricing.currency)}</dd><dt className="text-text-secondary">Référence</dt><dd className="text-right">{detail.pricing.current.reference}</dd></dl> : <p className="text-sm text-text-secondary">Aucun prix défini.</p>}<Button className="mt-4 w-full" onClick={() => setPricingOpen(true)} variant="secondary">Définir un nouveau prix</Button></div></section><section className="grid grid-cols-2 gap-3"><div className="rounded-lg border border-border p-4"><p className="text-xs text-text-secondary">Stock</p><Badge className="mt-2" variant={detail.trackInventory ? "info" : "neutral"}>{detail.trackInventory ? "Suivi activé" : "Suivi désactivé"}</Badge></div><div className="rounded-lg border border-border p-4"><p className="text-xs text-text-secondary">État</p><Badge className="mt-2" variant={detail.isActive ? "success" : "neutral"}>{detail.isActive ? "Actif" : "Inactif"}</Badge></div></section><Button isLoading={busy} onClick={() => void lifecycle()} variant={detail.isActive ? "danger" : "secondary"}>{detail.isActive ? "Désactiver le produit" : "Activer le produit"}</Button></div>{pricingOpen ? <PricingDialog busy={busy} currency={detail.pricing.currency} onConfirm={(input) => void pricing(input)} onOpenChange={setPricingOpen} open productName={detail.name} /> : null}</> : null}</DrawerContent></Drawer>;
+  return (
+    <Drawer onOpenChange={onOpenChange} open>
+      <DrawerContent className="w-[min(34rem,calc(100%-1rem))]">
+        {loading ? (
+          <div className="grid gap-4 pt-12">
+            <Skeleton className="h-8" />
+            <Skeleton className="h-40" />
+            <Skeleton className="h-32" />
+          </div>
+        ) : null}
+        {!loading && error ? (
+          <div className="pt-12">
+            <ErrorState description={error} onRetry={() => void load()} />
+          </div>
+        ) : null}
+        {!loading && detail ? (
+          <>
+            <DrawerHeader>
+              <DrawerTitle>{detail.name}</DrawerTitle>
+              <DrawerDescription>
+                {detail.code ?? "Sans code produit"}
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="mt-8 grid gap-8">
+              <section>
+                <SectionHeader title="Informations" />
+                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                  <dt className="text-text-secondary">Nom</dt>
+                  <dd>{detail.name}</dd>
+                  <dt className="text-text-secondary">Code</dt>
+                  <dd>{value(detail.code)}</dd>
+                  <dt className="text-text-secondary">Code-barres</dt>
+                  <dd>{value(detail.barcode)}</dd>
+                  <dt className="text-text-secondary">Conditionnement</dt>
+                  <dd>{value(detail.packaging)}</dd>
+                  <dt className="text-text-secondary">Forme</dt>
+                  <dd>{value(detail.form)}</dd>
+                </dl>
+              </section>
+              <section>
+                <SectionHeader title="Tarification" />
+                <div className="mt-3 rounded-lg border border-border p-4">
+                  {detail.pricing.current ? (
+                    <dl className="grid grid-cols-2 gap-3 text-sm">
+                      <dt className="text-text-secondary">Coût de référence</dt>
+                      <dd className="text-right font-medium">
+                        {formatMoney(
+                          detail.pricing.current.referenceCostMinor,
+                          detail.pricing.currency,
+                        )}
+                      </dd>
+                      <dt className="text-text-secondary">Prix de vente</dt>
+                      <dd className="text-right font-semibold">
+                        {formatMoney(
+                          detail.pricing.current.salePriceMinor,
+                          detail.pricing.currency,
+                        )}
+                      </dd>
+                      <dt className="text-text-secondary">Référence</dt>
+                      <dd className="text-right">
+                        {detail.pricing.current.reference}
+                      </dd>
+                    </dl>
+                  ) : (
+                    <p className="text-sm text-text-secondary">
+                      Aucun prix défini.
+                    </p>
+                  )}
+                  <Button
+                    className="mt-4 w-full"
+                    onClick={() => setPricingOpen(true)}
+                    variant="secondary"
+                  >
+                    Définir un nouveau prix
+                  </Button>
+                </div>
+              </section>
+              <section className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-border p-4">
+                  <p className="text-xs text-text-secondary">Stock</p>
+                  <Badge
+                    className="mt-2"
+                    variant={detail.trackInventory ? "info" : "neutral"}
+                  >
+                    {detail.trackInventory ? "Suivi activé" : "Suivi désactivé"}
+                  </Badge>
+                </div>
+                <div className="rounded-lg border border-border p-4">
+                  <p className="text-xs text-text-secondary">État</p>
+                  <Badge
+                    className="mt-2"
+                    variant={detail.isActive ? "success" : "neutral"}
+                  >
+                    {detail.isActive ? "Actif" : "Inactif"}
+                  </Badge>
+                </div>
+              </section>
+              <Button
+                isLoading={busy}
+                onClick={() => void lifecycle()}
+                variant={detail.isActive ? "danger" : "secondary"}
+              >
+                {detail.isActive
+                  ? "Désactiver le produit"
+                  : "Activer le produit"}
+              </Button>
+            </div>
+            {pricingOpen ? (
+              <PricingDialog
+                busy={busy}
+                currency={detail.pricing.currency}
+                onConfirm={(input) => void pricing(input)}
+                onOpenChange={setPricingOpen}
+                open
+                productName={detail.name}
+              />
+            ) : null}
+          </>
+        ) : null}
+      </DrawerContent>
+    </Drawer>
+  );
 }

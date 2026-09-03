@@ -11,7 +11,16 @@ export type AccessMember = Readonly<{
 }>;
 
 export interface AccessManagementRepository {
-  findMember(organizationId: string, userAccountId: string): Promise<AccessMember | null>;
+  findMember(
+    organizationId: string,
+    userAccountId: string,
+  ): Promise<AccessMember | null>;
   findActiveShopIds(organizationId: string): Promise<readonly string[]>;
-  updateAtomically(input: Readonly<{ actorId: string; member: AccessMember; previousRole: OrganizationRole }>): Promise<void>;
+  updateAtomically(
+    input: Readonly<{
+      actorId: string;
+      member: AccessMember;
+      previousRole: OrganizationRole;
+    }>,
+  ): Promise<void>;
 }

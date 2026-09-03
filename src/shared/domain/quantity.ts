@@ -5,7 +5,10 @@ export class Quantity {
 
   public static fromNumber(value: number): Quantity {
     if (!Number.isFinite(value) || value < 0) {
-      throw new DomainError("shared.invalid_quantity", "A quantity must be a finite non-negative number.");
+      throw new DomainError(
+        "shared.invalid_quantity",
+        "A quantity must be a finite non-negative number.",
+      );
     }
 
     return new Quantity(value);

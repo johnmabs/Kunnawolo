@@ -10,9 +10,31 @@ export async function currentAdministrationContext() {
   try {
     const account = await authenticateWebRequest(prisma);
     const preferred = (await cookies()).get("astu_organization")?.value;
-    const memberships = await prisma.organizationMembership.findMany({ where: { userAccountId: account.id.value, status: "ACTIVE" }, include: { organization: true, shopAssignments: true }, orderBy: { organization: { name: "asc" } } });
-    const membership = memberships.find(({ organizationId }) => organizationId === preferred) ?? memberships[0];
-    return membership ? { accountId: account.id.value, organization: { id: membership.organization.id, name: membership.organization.name, currency: membership.organization.currency }, role: membership.role, assignedShopIds: membership.shopAssignments.map(({ shopId }) => shopId) } : null;
-  } catch { return null; }
-  finally { await prisma.$disconnect(); }
+    const memberships = await prisma.organizationMembership.findMany({
+      where: { userAccountId: account.id.value, status: "ACTIVE" },
+      include: { organization: true, shopAssignments: true },
+      orderBy: { organization: { name: "asc" } },
+    });
+    const membership =
+      memberships.find(({ organizationId }) => organizationId === preferred) ??
+      memberships[0];
+    return membership
+      ? {
+          accountId: account.id.value,
+          organization: {
+            id: membership.organization.id,
+            name: membership.organization.name,
+            currency: membership.organization.currency,
+          },
+          role: membership.role,
+          assignedShopIds: membership.shopAssignments.map(
+            ({ shopId }) => shopId,
+          ),
+        }
+      : null;
+  } catch {
+    return null;
+  } finally {
+    await prisma.$disconnect();
+  }
 }

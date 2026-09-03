@@ -6,12 +6,24 @@ import { PrismaProductRepository } from "@/modules/catalog/infrastructure/prisma
 import { GetStockLevel } from "@/modules/inventory/application/get-stock-level";
 import { PrismaStockLevelRepository } from "@/modules/inventory/infrastructure/prisma-stock-level-repository";
 
-export async function getStockDetail(prisma: PrismaClient, organizationId: string, shopId: string, productId: string) {
+export async function getStockDetail(
+  prisma: PrismaClient,
+  organizationId: string,
+  shopId: string,
+  productId: string,
+) {
   const products = new PrismaProductRepository(prisma);
   const [product, level, pricing] = await Promise.all([
     new GetProduct(products).execute({ organizationId, productId }),
-    new GetStockLevel(new PrismaStockLevelRepository(prisma)).execute({ organizationId, shopId, productId }),
-    new GetCurrentProductPricing(products, new PrismaProductPricingRepository(prisma)).execute({ organizationId, productId }),
+    new GetStockLevel(new PrismaStockLevelRepository(prisma)).execute({
+      organizationId,
+      shopId,
+      productId,
+    }),
+    new GetCurrentProductPricing(
+      products,
+      new PrismaProductPricingRepository(prisma),
+    ).execute({ organizationId, productId }),
   ]);
   return {
     currency: pricing.referenceCost.currency,

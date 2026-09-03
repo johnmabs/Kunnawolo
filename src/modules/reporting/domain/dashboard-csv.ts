@@ -1,6 +1,7 @@
 import type { Dashboard } from "./dashboard";
 
-const csv = (value: string | number | null): string => `"${String(value ?? "").replaceAll('"', '""')}"`;
+const csv = (value: string | number | null): string =>
+  `"${String(value ?? "").replaceAll('"', '""')}"`;
 
 export function dashboardAsCsv(dashboard: Dashboard): string {
   const { filter, sales, stock, estimatedResult } = dashboard;
@@ -22,5 +23,8 @@ export function dashboardAsCsv(dashboard: Dashboard): string {
     ["valued_losses_minor", estimatedResult.valuedLosses.amountMinor],
     ["estimated_result_minor", estimatedResult.amount.amountMinor],
   ];
-  return ["metric,value", ...rows.map(([metric, value]) => `${csv(metric)},${csv(value)}`)].join("\n");
+  return [
+    "metric,value",
+    ...rows.map(([metric, value]) => `${csv(metric)},${csv(value)}`),
+  ].join("\n");
 }

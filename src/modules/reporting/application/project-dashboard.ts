@@ -18,13 +18,29 @@ export class ProjectDashboard {
     private readonly losses: ValuedLossReportingSource,
   ) {}
 
-  public async execute(input: Readonly<{ organizationId: string; shopId?: string | null; occurredFrom?: Date | null; occurredTo?: Date | null }>): Promise<Dashboard> {
+  public async execute(
+    input: Readonly<{
+      organizationId: string;
+      shopId?: string | null;
+      occurredFrom?: Date | null;
+      occurredTo?: Date | null;
+    }>,
+  ): Promise<Dashboard> {
     const filter = DashboardFilter.create(input);
-    const query = { organizationId: filter.organizationId.value, shopId: filter.shopId?.value ?? null, occurredFrom: filter.occurredFrom, occurredTo: filter.occurredTo };
+    const query = {
+      organizationId: filter.organizationId.value,
+      shopId: filter.shopId?.value ?? null,
+      occurredFrom: filter.occurredFrom,
+      occurredTo: filter.occurredTo,
+    };
     const [sales, stock, estimatedResult] = await Promise.all([
       new ProjectSales(this.sales).execute(query),
       new ProjectStock(this.inventory, this.transfers).execute(query),
-      new ProjectEstimatedResult(this.sales, this.expenses, this.losses).execute(query),
+      new ProjectEstimatedResult(
+        this.sales,
+        this.expenses,
+        this.losses,
+      ).execute(query),
     ]);
     return { filter, sales, stock, estimatedResult };
   }

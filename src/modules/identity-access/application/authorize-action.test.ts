@@ -5,6 +5,15 @@ import { AuthorizeAction } from "./authorize-action";
 describe("AuthorizeAction", () => {
   it("rejects an inactive membership", () => {
     const authorize = new AuthorizeAction(new AuthorizationPolicy());
-    expect(() => authorize.execute({ membershipStatus: "INACTIVE", role: "CASHIER", membershipOrganizationId: "org", targetOrganizationId: "org", targetShopId: "shop", assignedShopIds: ["shop"] })).toThrow("Membership is not authorized");
+    expect(() =>
+      authorize.execute({
+        membershipStatus: "INACTIVE",
+        role: "CASHIER",
+        membershipOrganizationId: "org",
+        targetOrganizationId: "org",
+        targetShopId: "shop",
+        assignedShopIds: ["shop"],
+      }),
+    ).toThrow("Membership is not authorized");
   });
 });

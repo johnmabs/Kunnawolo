@@ -1,3 +1,7 @@
 export interface ReportingReadAuthorization {
-  authorize(organizationId: string, shopId: string | null, actorId: string | null): Promise<void>;
+  authorize(
+    organizationId: string,
+    shopId: string | null,
+    actorId: string | null,
+  ): Promise<void>;
 }

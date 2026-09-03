@@ -39,7 +39,9 @@ export type TransferProduct = Readonly<{
   trackInventory: boolean;
 }>;
 
-export type TransferProductSearch = Readonly<{ items: readonly TransferProduct[] }>;
+export type TransferProductSearch = Readonly<{
+  items: readonly TransferProduct[];
+}>;
 
 export class TransferApiError extends Error {
   public constructor(public readonly code: string) {

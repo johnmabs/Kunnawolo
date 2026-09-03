@@ -1,14 +1,123 @@
 "use client";
 import { useState } from "react";
-import { Badge, Button, Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, SectionHeader, useToast } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  SectionHeader,
+  useToast,
+} from "@/components/ui";
 import { formatMoney } from "@/lib/format-money";
 import { cancelExpense } from "./expenses-api";
 import { expenseErrorMessage } from "./error-messages";
 import { CancelExpenseDialog } from "./cancel-expense-dialog";
 import type { ExpenseAccess, ExpenseItem } from "./types";
 
-export function ExpenseDetailDrawer({ access, expense, onChanged, onOpenChange }: Readonly<{ access: ExpenseAccess; expense: ExpenseItem; onChanged: () => void; onOpenChange: (open: boolean) => void }>) {
-  const { toast } = useToast(); const [cancelOpen, setCancelOpen] = useState(false); const [busy, setBusy] = useState(false);
-  async function cancel(reference: string, reason: string) { setBusy(true); try { await cancelExpense(access, expense.id, reference, reason); setCancelOpen(false); onOpenChange(false); onChanged(); toast({ title: "Dépense annulée", variant: "success" }); } catch (failure) { toast({ title: "Annulation impossible", description: expenseErrorMessage(failure), variant: "error" }); } finally { setBusy(false); } }
-  return <Drawer onOpenChange={onOpenChange} open><DrawerContent className="w-[min(32rem,calc(100%-1rem))]"><DrawerHeader><DrawerTitle>{expense.description}</DrawerTitle><DrawerDescription>{expense.reference}</DrawerDescription></DrawerHeader><div className="mt-8 grid gap-8"><div className="rounded-lg bg-sidebar p-5 text-white"><p className="text-sm text-slate-300">Montant</p><p className="mt-2 text-3xl font-semibold tabular-nums">{formatMoney(expense.amountMinor, expense.currency)}</p></div><section><SectionHeader title="Informations" /><dl className="mt-3 grid grid-cols-2 gap-3 text-sm"><dt className="text-text-secondary">Date</dt><dd>{new Date(expense.occurredAt).toLocaleDateString("fr-FR")}</dd><dt className="text-text-secondary">Catégorie</dt><dd>{expense.categoryName}</dd><dt className="text-text-secondary">Imputation</dt><dd>{expense.shopId ? "Boutique de travail" : "Organisation entière"}</dd><dt className="text-text-secondary">État</dt><dd><Badge variant={expense.cancellation ? "danger" : "success"}>{expense.cancellation ? "Annulée" : "Active"}</Badge></dd></dl></section>{expense.cancellation ? <section><SectionHeader title="Annulation" /><dl className="mt-3 grid grid-cols-2 gap-3 text-sm"><dt className="text-text-secondary">Référence</dt><dd>{expense.cancellation.reference}</dd><dt className="text-text-secondary">Motif</dt><dd>{expense.cancellation.reason}</dd><dt className="text-text-secondary">Date</dt><dd>{new Date(expense.cancellation.cancelledAt).toLocaleDateString("fr-FR")}</dd></dl></section> : <Button onClick={() => setCancelOpen(true)} variant="danger">Annuler la dépense</Button>}</div>{cancelOpen ? <CancelExpenseDialog busy={busy} expense={expense} onConfirm={(reference, reason) => void cancel(reference, reason)} onOpenChange={setCancelOpen} open /> : null}</DrawerContent></Drawer>;
+export function ExpenseDetailDrawer({
+  access,
+  expense,
+  onChanged,
+  onOpenChange,
+}: Readonly<{
+  access: ExpenseAccess;
+  expense: ExpenseItem;
+  onChanged: () => void;
+  onOpenChange: (open: boolean) => void;
+}>) {
+  const { toast } = useToast();
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  async function cancel(reference: string, reason: string) {
+    setBusy(true);
+    try {
+      await cancelExpense(access, expense.id, reference, reason);
+      setCancelOpen(false);
+      onOpenChange(false);
+      onChanged();
+      toast({ title: "Dépense annulée", variant: "success" });
+    } catch (failure) {
+      toast({
+        title: "Annulation impossible",
+        description: expenseErrorMessage(failure),
+        variant: "error",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <Drawer onOpenChange={onOpenChange} open>
+      <DrawerContent className="w-[min(32rem,calc(100%-1rem))]">
+        <DrawerHeader>
+          <DrawerTitle>{expense.description}</DrawerTitle>
+          <DrawerDescription>{expense.reference}</DrawerDescription>
+        </DrawerHeader>
+        <div className="mt-8 grid gap-8">
+          <div className="rounded-lg bg-sidebar p-5 text-white">
+            <p className="text-sm text-slate-300">Montant</p>
+            <p className="mt-2 text-3xl font-semibold tabular-nums">
+              {formatMoney(expense.amountMinor, expense.currency)}
+            </p>
+          </div>
+          <section>
+            <SectionHeader title="Informations" />
+            <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
+              <dt className="text-text-secondary">Date</dt>
+              <dd>
+                {new Date(expense.occurredAt).toLocaleDateString("fr-FR")}
+              </dd>
+              <dt className="text-text-secondary">Catégorie</dt>
+              <dd>{expense.categoryName}</dd>
+              <dt className="text-text-secondary">Imputation</dt>
+              <dd>
+                {expense.shopId
+                  ? "Boutique de travail"
+                  : "Organisation entière"}
+              </dd>
+              <dt className="text-text-secondary">État</dt>
+              <dd>
+                <Badge variant={expense.cancellation ? "danger" : "success"}>
+                  {expense.cancellation ? "Annulée" : "Active"}
+                </Badge>
+              </dd>
+            </dl>
+          </section>
+          {expense.cancellation ? (
+            <section>
+              <SectionHeader title="Annulation" />
+              <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <dt className="text-text-secondary">Référence</dt>
+                <dd>{expense.cancellation.reference}</dd>
+                <dt className="text-text-secondary">Motif</dt>
+                <dd>{expense.cancellation.reason}</dd>
+                <dt className="text-text-secondary">Date</dt>
+                <dd>
+                  {new Date(
+                    expense.cancellation.cancelledAt,
+                  ).toLocaleDateString("fr-FR")}
+                </dd>
+              </dl>
+            </section>
+          ) : (
+            <Button onClick={() => setCancelOpen(true)} variant="danger">
+              Annuler la dépense
+            </Button>
+          )}
+        </div>
+        {cancelOpen ? (
+          <CancelExpenseDialog
+            busy={busy}
+            expense={expense}
+            onConfirm={(reference, reason) => void cancel(reference, reason)}
+            onOpenChange={setCancelOpen}
+            open
+          />
+        ) : null}
+      </DrawerContent>
+    </Drawer>
+  );
 }

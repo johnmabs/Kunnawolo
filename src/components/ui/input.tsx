@@ -1,9 +1,13 @@
 import { forwardRef, type InputHTMLAttributes } from "react";
 import { cn } from "@/lib/class-names";
 
-export type InputProps = InputHTMLAttributes<HTMLInputElement> & Readonly<{ invalid?: boolean }>;
+export type InputProps = InputHTMLAttributes<HTMLInputElement> &
+  Readonly<{ invalid?: boolean }>;
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ className, invalid, ...props }, ref) {
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  { className, invalid, ...props },
+  ref,
+) {
   return (
     <input
       aria-invalid={invalid || undefined}

@@ -1,7 +1,8 @@
 import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/class-names";
 
-export type BadgeVariant = "neutral" | "info" | "success" | "warning" | "danger";
+export type BadgeVariant =
+  "neutral" | "info" | "success" | "warning" | "danger";
 
 const variants: Record<BadgeVariant, string> = {
   neutral: "bg-surface-subtle text-text-secondary ring-border",
@@ -11,6 +12,19 @@ const variants: Record<BadgeVariant, string> = {
   danger: "bg-danger/10 text-danger ring-danger/20",
 };
 
-export function Badge({ className, variant = "neutral", ...props }: HTMLAttributes<HTMLSpanElement> & Readonly<{ variant?: BadgeVariant }>) {
-  return <span className={cn("inline-flex min-h-6 items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset", variants[variant], className)} {...props} />;
+export function Badge({
+  className,
+  variant = "neutral",
+  ...props
+}: HTMLAttributes<HTMLSpanElement> & Readonly<{ variant?: BadgeVariant }>) {
+  return (
+    <span
+      className={cn(
+        "inline-flex min-h-6 items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset",
+        variants[variant],
+        className,
+      )}
+      {...props}
+    />
+  );
 }

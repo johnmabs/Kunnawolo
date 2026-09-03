@@ -10,10 +10,17 @@ export class CreateOrganization {
     private readonly identifiers: IdentifierGenerator,
   ) {}
 
-  public async execute(profile: OrganizationProfile, actorId: string | null = null): Promise<Organization> {
+  public async execute(
+    profile: OrganizationProfile,
+    actorId: string | null = null,
+  ): Promise<Organization> {
     const organization = Organization.create(this.identifiers.next(), profile);
     await this.organizations.save(organization);
-    await this.auditLog.record({ organizationId: organization.id.value, actorId, action: "organization.created" });
+    await this.auditLog.record({
+      organizationId: organization.id.value,
+      actorId,
+      action: "organization.created",
+    });
     return organization;
   }
 }

@@ -11,10 +11,19 @@ export class RegisterWithPassword {
     private readonly identifiers: IdentifierGenerator,
   ) {}
 
-  public async execute(input: Readonly<{ email: string; displayName: string; password: string }>): Promise<UserAccount> {
-    const account = UserAccount.create(this.identifiers.next(), input.email, input.displayName);
+  public async execute(
+    input: Readonly<{ email: string; displayName: string; password: string }>,
+  ): Promise<UserAccount> {
+    const account = UserAccount.create(
+      this.identifiers.next(),
+      input.email,
+      input.displayName,
+    );
     if (await this.repository.findAccountWithCredentialByEmail(account.email)) {
-      throw new DomainError("auth.email_taken", "An account already exists for this email.");
+      throw new DomainError(
+        "auth.email_taken",
+        "An account already exists for this email.",
+      );
     }
     const credential = await this.passwords.create(input.password);
     await this.repository.createAccount(account, credential);

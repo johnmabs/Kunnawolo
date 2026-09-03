@@ -8,7 +8,8 @@ export type MembershipListItem = Readonly<{
   invitedAt: Date;
   invitationExpiresAt: Date | null;
   invitationId: string | null;
-  invitationDeliveryStatus: "PENDING" | "PROCESSING" | "FAILED" | "SENT" | "CANCELLED" | null;
+  invitationDeliveryStatus:
+    "PENDING" | "PROCESSING" | "FAILED" | "SENT" | "CANCELLED" | null;
   invitationDeliveryAttempts: number;
   shopIds: readonly string[];
 }>;

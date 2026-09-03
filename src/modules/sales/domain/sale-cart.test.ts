@@ -3,11 +3,99 @@ import { Identifier } from "@/shared/domain/identifier";
 import { Money } from "@/shared/domain/money";
 import { Quantity } from "@/shared/domain/quantity";
 import { SaleCart, SaleLine } from "./sale-cart";
-const line = () => SaleLine.create({ id: Identifier.fromString("line"), productId: Identifier.fromString("product"), productNameSnapshot: "  Nsiirin Ɛ Ɔ ɲ ŋ Fɔ́lɔ  ", quantity: Quantity.fromNumber(2), unitPrice: Money.fromMinor(800, "XOF"), unitCost: Money.fromMinor(500, "XOF"), discount: Money.fromMinor(100, "XOF") });
+const line = () =>
+  SaleLine.create({
+    id: Identifier.fromString("line"),
+    productId: Identifier.fromString("product"),
+    productNameSnapshot: "  Nsiirin Ɛ Ɔ ɲ ŋ Fɔ́lɔ  ",
+    quantity: Quantity.fromNumber(2),
+    unitPrice: Money.fromMinor(800, "XOF"),
+    unitCost: Money.fromMinor(500, "XOF"),
+    discount: Money.fromMinor(100, "XOF"),
+  });
 describe("SaleCart", () => {
-  it("keeps immutable Unicode commercial snapshots", () => { expect(line()).toMatchObject({ productNameSnapshot: "Nsiirin Ɛ Ɔ ɲ ŋ Fɔ́lɔ".normalize("NFC"), quantity: { value: 2 }, unitPrice: { amountMinor: 800 }, unitCost: { amountMinor: 500 }, discount: { amountMinor: 100 } }); });
-  it("adds and removes lines without changing its scope", () => { const cart = SaleCart.draft(Identifier.fromString("cart"), Identifier.fromString("org"), Identifier.fromString("shop")); expect(cart.addOrReplace(line()).remove(Identifier.fromString("line"))).toMatchObject({ organizationId: { value: "org" }, shopId: { value: "shop" }, lines: [] }); });
-  it("rejects excessive discounts", () => { expect(() => SaleLine.create({ id: Identifier.fromString("line"), productId: Identifier.fromString("product"), productNameSnapshot: "Nsiirin", quantity: Quantity.fromNumber(1), unitPrice: Money.fromMinor(800, "XOF"), unitCost: Money.fromMinor(500, "XOF"), discount: Money.fromMinor(801, "XOF") })).toThrowError(expect.objectContaining({ code: "sales.invalid_discount" })); });
-  it("requires a non-empty cart and normalizes its finalization reference", () => { const cart = SaleCart.draft(Identifier.fromString("cart"), Identifier.fromString("org"), Identifier.fromString("shop"), [line()]); expect(cart.finalize("  Vente Fɔ́lɔ  ", "actor", new Date("2026-09-01T12:00:00.000Z"))).toMatchObject({ reference: "Vente Fɔ́lɔ".normalize("NFC"), actorId: "actor" }); expect(() => SaleCart.draft(Identifier.fromString("empty"), Identifier.fromString("org"), Identifier.fromString("shop")).finalize("REF", "actor", new Date())).toThrowError(expect.objectContaining({ code: "sales.empty_cart" })); });
-  it("requires a reason for a sale below its cost", () => { const underCost = SaleLine.create({ id: Identifier.fromString("under"), productId: Identifier.fromString("product"), productNameSnapshot: "Nsiirin", quantity: Quantity.fromNumber(1), unitPrice: Money.fromMinor(400, "XOF"), unitCost: Money.fromMinor(500, "XOF"), discount: Money.fromMinor(0, "XOF") }); const cart = SaleCart.draft(Identifier.fromString("cart-under"), Identifier.fromString("org"), Identifier.fromString("shop"), [underCost]); expect(() => cart.finalize("Vente", "actor", new Date())).toThrowError(expect.objectContaining({ code: "sales.under_cost_reason_required" })); expect(cart.finalize("Vente", "actor", new Date(), "  Promotion Ɛ  ")).toMatchObject({ underCostReason: "Promotion Ɛ" }); });
+  it("keeps immutable Unicode commercial snapshots", () => {
+    expect(line()).toMatchObject({
+      productNameSnapshot: "Nsiirin Ɛ Ɔ ɲ ŋ Fɔ́lɔ".normalize("NFC"),
+      quantity: { value: 2 },
+      unitPrice: { amountMinor: 800 },
+      unitCost: { amountMinor: 500 },
+      discount: { amountMinor: 100 },
+    });
+  });
+  it("adds and removes lines without changing its scope", () => {
+    const cart = SaleCart.draft(
+      Identifier.fromString("cart"),
+      Identifier.fromString("org"),
+      Identifier.fromString("shop"),
+    );
+    expect(
+      cart.addOrReplace(line()).remove(Identifier.fromString("line")),
+    ).toMatchObject({
+      organizationId: { value: "org" },
+      shopId: { value: "shop" },
+      lines: [],
+    });
+  });
+  it("rejects excessive discounts", () => {
+    expect(() =>
+      SaleLine.create({
+        id: Identifier.fromString("line"),
+        productId: Identifier.fromString("product"),
+        productNameSnapshot: "Nsiirin",
+        quantity: Quantity.fromNumber(1),
+        unitPrice: Money.fromMinor(800, "XOF"),
+        unitCost: Money.fromMinor(500, "XOF"),
+        discount: Money.fromMinor(801, "XOF"),
+      }),
+    ).toThrowError(expect.objectContaining({ code: "sales.invalid_discount" }));
+  });
+  it("requires a non-empty cart and normalizes its finalization reference", () => {
+    const cart = SaleCart.draft(
+      Identifier.fromString("cart"),
+      Identifier.fromString("org"),
+      Identifier.fromString("shop"),
+      [line()],
+    );
+    expect(
+      cart.finalize(
+        "  Vente Fɔ́lɔ  ",
+        "actor",
+        new Date("2026-09-01T12:00:00.000Z"),
+      ),
+    ).toMatchObject({
+      reference: "Vente Fɔ́lɔ".normalize("NFC"),
+      actorId: "actor",
+    });
+    expect(() =>
+      SaleCart.draft(
+        Identifier.fromString("empty"),
+        Identifier.fromString("org"),
+        Identifier.fromString("shop"),
+      ).finalize("REF", "actor", new Date()),
+    ).toThrowError(expect.objectContaining({ code: "sales.empty_cart" }));
+  });
+  it("requires a reason for a sale below its cost", () => {
+    const underCost = SaleLine.create({
+      id: Identifier.fromString("under"),
+      productId: Identifier.fromString("product"),
+      productNameSnapshot: "Nsiirin",
+      quantity: Quantity.fromNumber(1),
+      unitPrice: Money.fromMinor(400, "XOF"),
+      unitCost: Money.fromMinor(500, "XOF"),
+      discount: Money.fromMinor(0, "XOF"),
+    });
+    const cart = SaleCart.draft(
+      Identifier.fromString("cart-under"),
+      Identifier.fromString("org"),
+      Identifier.fromString("shop"),
+      [underCost],
+    );
+    expect(() => cart.finalize("Vente", "actor", new Date())).toThrowError(
+      expect.objectContaining({ code: "sales.under_cost_reason_required" }),
+    );
+    expect(
+      cart.finalize("Vente", "actor", new Date(), "  Promotion Ɛ  "),
+    ).toMatchObject({ underCostReason: "Promotion Ɛ" });
+  });
 });

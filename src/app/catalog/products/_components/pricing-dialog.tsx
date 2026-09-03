@@ -1,12 +1,121 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Field, Input } from "@/components/ui";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Field,
+  Input,
+} from "@/components/ui";
 
-export function PricingDialog({ busy, currency, onConfirm, onOpenChange, open, productName }: Readonly<{ busy: boolean; currency: string; onConfirm: (input: { referenceCostMinor: number; salePriceMinor: number; reference: string }) => void; onOpenChange: (open: boolean) => void; open: boolean; productName: string }>) {
-  const [cost, setCost] = useState(""); const [price, setPrice] = useState(""); const [reference, setReference] = useState("");
-  const fractionDigits = new Intl.NumberFormat("fr-FR", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
-  const factor = 10 ** fractionDigits; const costMinor = Math.round(Number(cost) * factor); const priceMinor = Math.round(Number(price) * factor);
-  const valid = Number(cost) >= 0 && Number(price) > 0 && reference.trim().length > 0 && Number.isSafeInteger(costMinor) && Number.isSafeInteger(priceMinor);
-  function submit(event: FormEvent) { event.preventDefault(); if (valid) onConfirm({ referenceCostMinor: costMinor, salePriceMinor: priceMinor, reference }); }
-  return <Dialog onOpenChange={onOpenChange} open={open}><DialogContent><form onSubmit={submit}><DialogHeader><DialogTitle>Définir un nouveau prix</DialogTitle><DialogDescription>{productName} · {currency}</DialogDescription></DialogHeader><div className="mt-6 grid gap-4"><Field label="Coût de référence" name="reference-cost" required>{({ controlId }) => <Input id={controlId} min={0} onChange={(event) => setCost(event.target.value)} step={1 / factor} type="number" value={cost} />}</Field><Field label="Prix de vente" name="sale-price" required>{({ controlId }) => <Input id={controlId} min={1 / factor} onChange={(event) => setPrice(event.target.value)} step={1 / factor} type="number" value={price} />}</Field><Field label="Référence / motif" name="pricing-reference" required>{({ controlId }) => <Input id={controlId} onChange={(event) => setReference(event.target.value)} value={reference} />}</Field></div><DialogFooter><Button disabled={busy} onClick={() => onOpenChange(false)} variant="secondary">Annuler</Button><Button disabled={!valid} isLoading={busy} type="submit">Définir le prix</Button></DialogFooter></form></DialogContent></Dialog>;
+export function PricingDialog({
+  busy,
+  currency,
+  onConfirm,
+  onOpenChange,
+  open,
+  productName,
+}: Readonly<{
+  busy: boolean;
+  currency: string;
+  onConfirm: (input: {
+    referenceCostMinor: number;
+    salePriceMinor: number;
+    reference: string;
+  }) => void;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+  productName: string;
+}>) {
+  const [cost, setCost] = useState("");
+  const [price, setPrice] = useState("");
+  const [reference, setReference] = useState("");
+  const fractionDigits =
+    new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency,
+    }).resolvedOptions().maximumFractionDigits ?? 2;
+  const factor = 10 ** fractionDigits;
+  const costMinor = Math.round(Number(cost) * factor);
+  const priceMinor = Math.round(Number(price) * factor);
+  const valid =
+    Number(cost) >= 0 &&
+    Number(price) > 0 &&
+    reference.trim().length > 0 &&
+    Number.isSafeInteger(costMinor) &&
+    Number.isSafeInteger(priceMinor);
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    if (valid)
+      onConfirm({
+        referenceCostMinor: costMinor,
+        salePriceMinor: priceMinor,
+        reference,
+      });
+  }
+  return (
+    <Dialog onOpenChange={onOpenChange} open={open}>
+      <DialogContent>
+        <form onSubmit={submit}>
+          <DialogHeader>
+            <DialogTitle>Définir un nouveau prix</DialogTitle>
+            <DialogDescription>
+              {productName} · {currency}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-6 grid gap-4">
+            <Field label="Coût de référence" name="reference-cost" required>
+              {({ controlId }) => (
+                <Input
+                  id={controlId}
+                  min={0}
+                  onChange={(event) => setCost(event.target.value)}
+                  step={1 / factor}
+                  type="number"
+                  value={cost}
+                />
+              )}
+            </Field>
+            <Field label="Prix de vente" name="sale-price" required>
+              {({ controlId }) => (
+                <Input
+                  id={controlId}
+                  min={1 / factor}
+                  onChange={(event) => setPrice(event.target.value)}
+                  step={1 / factor}
+                  type="number"
+                  value={price}
+                />
+              )}
+            </Field>
+            <Field label="Référence / motif" name="pricing-reference" required>
+              {({ controlId }) => (
+                <Input
+                  id={controlId}
+                  onChange={(event) => setReference(event.target.value)}
+                  value={reference}
+                />
+              )}
+            </Field>
+          </div>
+          <DialogFooter>
+            <Button
+              disabled={busy}
+              onClick={() => onOpenChange(false)}
+              variant="secondary"
+            >
+              Annuler
+            </Button>
+            <Button disabled={!valid} isLoading={busy} type="submit">
+              Définir le prix
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }

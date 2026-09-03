@@ -2,8 +2,71 @@ import { describe, expect, it } from "vitest";
 import { Identifier } from "@/shared/domain/identifier";
 import { CreateExpenseCategory } from "./create-expense-category";
 import { UpdateExpenseCategory } from "./update-expense-category";
-import type { ExpenseCategoryAudit, ExpenseCategoryRepository } from "./ports/expense-category-repository";
+import type {
+  ExpenseCategoryAudit,
+  ExpenseCategoryRepository,
+} from "./ports/expense-category-repository";
 import type { ExpenseCategory } from "../domain/expense-category";
 
-class MemoryCategories implements ExpenseCategoryRepository { public readonly audits: ExpenseCategoryAudit[] = []; private readonly values = new Map<string, ExpenseCategory>(); public async save(category: ExpenseCategory, audit: ExpenseCategoryAudit): Promise<void> { if ([...this.values.values()].some((value) => value.id.value !== category.id.value && value.organizationId.value === category.organizationId.value && value.name === category.name)) throw new Error("expenses.duplicate_category_name"); this.values.set(category.id.value, category); this.audits.push(audit); } public async findById(organizationId: string, id: string): Promise<ExpenseCategory | null> { const category = this.values.get(id); return category?.organizationId.value === organizationId ? category : null; } }
-describe("expense category use cases", () => { it("creates and deactivates an isolated Unicode category", async () => { const categories = new MemoryCategories(); const create = new CreateExpenseCategory(categories, { next: () => Identifier.fromString("expense-category") }); await create.execute({ organizationId: "org", name: "  Transport Ɛ  ", actorId: "actor" }); await expect(new UpdateExpenseCategory(categories).execute({ organizationId: "org", categoryId: "expense-category", name: "Transport Ɛ", isActive: false, actorId: "actor-2" })).resolves.toMatchObject({ name: "Transport Ɛ", isActive: false }); await expect(new UpdateExpenseCategory(categories).execute({ organizationId: "other", categoryId: "expense-category", name: "X", isActive: true, actorId: null })).rejects.toMatchObject({ code: "expenses.category_not_found" }); expect(categories.audits).toMatchObject([{ action: "expense_category.created" }, { action: "expense_category.updated" }]); }); });
+class MemoryCategories implements ExpenseCategoryRepository {
+  public readonly audits: ExpenseCategoryAudit[] = [];
+  private readonly values = new Map<string, ExpenseCategory>();
+  public async save(
+    category: ExpenseCategory,
+    audit: ExpenseCategoryAudit,
+  ): Promise<void> {
+    if (
+      [...this.values.values()].some(
+        (value) =>
+          value.id.value !== category.id.value &&
+          value.organizationId.value === category.organizationId.value &&
+          value.name === category.name,
+      )
+    )
+      throw new Error("expenses.duplicate_category_name");
+    this.values.set(category.id.value, category);
+    this.audits.push(audit);
+  }
+  public async findById(
+    organizationId: string,
+    id: string,
+  ): Promise<ExpenseCategory | null> {
+    const category = this.values.get(id);
+    return category?.organizationId.value === organizationId ? category : null;
+  }
+}
+describe("expense category use cases", () => {
+  it("creates and deactivates an isolated Unicode category", async () => {
+    const categories = new MemoryCategories();
+    const create = new CreateExpenseCategory(categories, {
+      next: () => Identifier.fromString("expense-category"),
+    });
+    await create.execute({
+      organizationId: "org",
+      name: "  Transport Ɛ  ",
+      actorId: "actor",
+    });
+    await expect(
+      new UpdateExpenseCategory(categories).execute({
+        organizationId: "org",
+        categoryId: "expense-category",
+        name: "Transport Ɛ",
+        isActive: false,
+        actorId: "actor-2",
+      }),
+    ).resolves.toMatchObject({ name: "Transport Ɛ", isActive: false });
+    await expect(
+      new UpdateExpenseCategory(categories).execute({
+        organizationId: "other",
+        categoryId: "expense-category",
+        name: "X",
+        isActive: true,
+        actorId: null,
+      }),
+    ).rejects.toMatchObject({ code: "expenses.category_not_found" });
+    expect(categories.audits).toMatchObject([
+      { action: "expense_category.created" },
+      { action: "expense_category.updated" },
+    ]);
+  });
+});

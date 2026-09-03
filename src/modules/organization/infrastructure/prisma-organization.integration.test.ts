@@ -13,7 +13,9 @@ import { PrismaOrganizationRepository } from "./prisma-organization-repository";
 const databaseUrl = process.env.DATABASE_URL;
 
 if (databaseUrl === undefined) {
-  throw new Error("DATABASE_URL is required for organization integration tests.");
+  throw new Error(
+    "DATABASE_URL is required for organization integration tests.",
+  );
 }
 
 const organizationId = "organization-integration-test";
@@ -32,12 +34,25 @@ afterAll(async () => {
 describe("PrismaOrganizationRepository", () => {
   it("persists normalized Unicode data and its creation audit", async () => {
     const organizations = new PrismaOrganizationRepository(prisma);
-    const createOrganization = new CreateOrganization(organizations, new PrismaAuditLog(prisma), identifiers);
+    const createOrganization = new CreateOrganization(
+      organizations,
+      new PrismaAuditLog(prisma),
+      identifiers,
+    );
 
-    await createOrganization.execute({ name: "  Kɔ̀rɔfɛ  ", currency: "XOF" }, "actor-1");
+    await createOrganization.execute(
+      { name: "  Kɔ̀rɔfɛ  ", currency: "XOF" },
+      "actor-1",
+    );
 
-    expect((await organizations.findById(organizationId))?.name).toBe("Kɔ̀rɔfɛ".normalize("NFC"));
-    await expect(prisma.organizationAudit.findFirst({ where: { organizationId, action: "organization.created" } })).resolves.toMatchObject({
+    expect((await organizations.findById(organizationId))?.name).toBe(
+      "Kɔ̀rɔfɛ".normalize("NFC"),
+    );
+    await expect(
+      prisma.organizationAudit.findFirst({
+        where: { organizationId, action: "organization.created" },
+      }),
+    ).resolves.toMatchObject({
       actorId: "actor-1",
     });
   });

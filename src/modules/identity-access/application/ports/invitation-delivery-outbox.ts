@@ -8,10 +8,13 @@ export type InvitationDeliveryMessage = Readonly<{
   expiresAt: Date;
 }>;
 
-export type ClaimedInvitationDelivery = InvitationDeliveryMessage & Readonly<{ attemptCount: number }>;
+export type ClaimedInvitationDelivery = InvitationDeliveryMessage &
+  Readonly<{ attemptCount: number }>;
 
 export interface InvitationDeliveryOutbox {
-  claim(input: Readonly<{ id?: string; now: Date; lockedBefore: Date }>): Promise<ClaimedInvitationDelivery | null>;
+  claim(
+    input: Readonly<{ id?: string; now: Date; lockedBefore: Date }>,
+  ): Promise<ClaimedInvitationDelivery | null>;
   markSent(id: string, sentAt: Date): Promise<void>;
   markFailed(id: string, errorCode: string, nextAttemptAt: Date): Promise<void>;
 }

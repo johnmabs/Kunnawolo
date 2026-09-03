@@ -9,9 +9,18 @@ export class StockTransferLine {
     public readonly quantity: Quantity,
   ) {}
 
-  public static create(input: Readonly<{ id: Identifier; productId: Identifier; quantity: Quantity }>): StockTransferLine {
+  public static create(
+    input: Readonly<{
+      id: Identifier;
+      productId: Identifier;
+      quantity: Quantity;
+    }>,
+  ): StockTransferLine {
     if (!input.quantity.isPositive()) {
-      throw new DomainError("transfers.invalid_line_quantity", "A transfer line quantity must be strictly positive.");
+      throw new DomainError(
+        "transfers.invalid_line_quantity",
+        "A transfer line quantity must be strictly positive.",
+      );
     }
     return new StockTransferLine(input.id, input.productId, input.quantity);
   }
@@ -26,11 +35,28 @@ export class StockTransfer {
     public readonly lines: readonly StockTransferLine[],
   ) {}
 
-  public static draft(input: Readonly<{ id: Identifier; organizationId: Identifier; sourceShopId: Identifier; destinationShopId: Identifier; lines?: readonly StockTransferLine[] }>): StockTransfer {
+  public static draft(
+    input: Readonly<{
+      id: Identifier;
+      organizationId: Identifier;
+      sourceShopId: Identifier;
+      destinationShopId: Identifier;
+      lines?: readonly StockTransferLine[];
+    }>,
+  ): StockTransfer {
     if (input.sourceShopId.equals(input.destinationShopId)) {
-      throw new DomainError("transfers.same_source_and_destination", "The source and destination shops must differ.");
+      throw new DomainError(
+        "transfers.same_source_and_destination",
+        "The source and destination shops must differ.",
+      );
     }
-    return new StockTransfer(input.id, input.organizationId, input.sourceShopId, input.destinationShopId, input.lines ?? []);
+    return new StockTransfer(
+      input.id,
+      input.organizationId,
+      input.sourceShopId,
+      input.destinationShopId,
+      input.lines ?? [],
+    );
   }
 
   public addOrReplace(line: StockTransferLine): StockTransfer {
@@ -39,7 +65,12 @@ export class StockTransfer {
       organizationId: this.organizationId,
       sourceShopId: this.sourceShopId,
       destinationShopId: this.destinationShopId,
-      lines: [...this.lines.filter(({ productId }) => !productId.equals(line.productId)), line],
+      lines: [
+        ...this.lines.filter(
+          ({ productId }) => !productId.equals(line.productId),
+        ),
+        line,
+      ],
     });
   }
 }
@@ -56,11 +87,33 @@ export class StockTransferShipment {
     public readonly sentAt: Date,
   ) {}
 
-  public static create(transfer: StockTransfer, reference: string, actorId: string | null, sentAt: Date): StockTransferShipment {
-    if (transfer.lines.length === 0) throw new DomainError("transfers.empty_transfer", "An empty transfer cannot be sent.");
+  public static create(
+    transfer: StockTransfer,
+    reference: string,
+    actorId: string | null,
+    sentAt: Date,
+  ): StockTransferShipment {
+    if (transfer.lines.length === 0)
+      throw new DomainError(
+        "transfers.empty_transfer",
+        "An empty transfer cannot be sent.",
+      );
     const normalizedReference = reference.trim().normalize("NFC");
-    if (normalizedReference.length === 0) throw new DomainError("transfers.invalid_shipment_reference", "A shipment reference must be non-empty.");
-    return new StockTransferShipment(transfer.id, transfer.organizationId, transfer.sourceShopId, transfer.destinationShopId, transfer.lines, normalizedReference, actorId, sentAt);
+    if (normalizedReference.length === 0)
+      throw new DomainError(
+        "transfers.invalid_shipment_reference",
+        "A shipment reference must be non-empty.",
+      );
+    return new StockTransferShipment(
+      transfer.id,
+      transfer.organizationId,
+      transfer.sourceShopId,
+      transfer.destinationShopId,
+      transfer.lines,
+      normalizedReference,
+      actorId,
+      sentAt,
+    );
   }
 }
 
@@ -72,20 +125,64 @@ export class StockTransferReception {
     public readonly receivedAt: Date,
   ) {}
 
-  public static create(shipment: StockTransferShipment, reference: string, actorId: string | null, receivedAt: Date): StockTransferReception {
+  public static create(
+    shipment: StockTransferShipment,
+    reference: string,
+    actorId: string | null,
+    receivedAt: Date,
+  ): StockTransferReception {
     const normalizedReference = reference.trim().normalize("NFC");
-    if (normalizedReference.length === 0) throw new DomainError("transfers.invalid_reception_reference", "A reception reference must be non-empty.");
-    return new StockTransferReception(shipment, normalizedReference, actorId, receivedAt);
+    if (normalizedReference.length === 0)
+      throw new DomainError(
+        "transfers.invalid_reception_reference",
+        "A reception reference must be non-empty.",
+      );
+    return new StockTransferReception(
+      shipment,
+      normalizedReference,
+      actorId,
+      receivedAt,
+    );
   }
 }
 
 export class StockTransferCancellation {
-  private constructor(public readonly transferId: Identifier, public readonly organizationId: Identifier, public readonly sourceShopId: Identifier, public readonly reference: string, public readonly reason: string, public readonly actorId: string | null, public readonly cancelledAt: Date) {}
-  public static create(transfer: StockTransfer, reference: string, reason: string, actorId: string | null, cancelledAt: Date): StockTransferCancellation {
+  private constructor(
+    public readonly transferId: Identifier,
+    public readonly organizationId: Identifier,
+    public readonly sourceShopId: Identifier,
+    public readonly reference: string,
+    public readonly reason: string,
+    public readonly actorId: string | null,
+    public readonly cancelledAt: Date,
+  ) {}
+  public static create(
+    transfer: StockTransfer,
+    reference: string,
+    reason: string,
+    actorId: string | null,
+    cancelledAt: Date,
+  ): StockTransferCancellation {
     const normalizedReference = reference.trim().normalize("NFC");
     const normalizedReason = reason.trim().normalize("NFC");
-    if (normalizedReference.length === 0) throw new DomainError("transfers.invalid_cancellation_reference", "A cancellation reference must be non-empty.");
-    if (normalizedReason.length === 0) throw new DomainError("transfers.invalid_cancellation_reason", "A cancellation reason must be non-empty.");
-    return new StockTransferCancellation(transfer.id, transfer.organizationId, transfer.sourceShopId, normalizedReference, normalizedReason, actorId, cancelledAt);
+    if (normalizedReference.length === 0)
+      throw new DomainError(
+        "transfers.invalid_cancellation_reference",
+        "A cancellation reference must be non-empty.",
+      );
+    if (normalizedReason.length === 0)
+      throw new DomainError(
+        "transfers.invalid_cancellation_reason",
+        "A cancellation reason must be non-empty.",
+      );
+    return new StockTransferCancellation(
+      transfer.id,
+      transfer.organizationId,
+      transfer.sourceShopId,
+      normalizedReference,
+      normalizedReason,
+      actorId,
+      cancelledAt,
+    );
   }
 }

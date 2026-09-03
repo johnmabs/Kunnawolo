@@ -11,16 +11,48 @@ export class SendStockTransfer {
     private readonly clock: Clock,
   ) {}
 
-  public async execute(input: Readonly<{ organizationId: string; transferId: string; reference: string; actorId: string | null }>): Promise<StockTransferShipment> {
+  public async execute(
+    input: Readonly<{
+      organizationId: string;
+      transferId: string;
+      reference: string;
+      actorId: string | null;
+    }>,
+  ): Promise<StockTransferShipment> {
     const reference = input.reference.trim().normalize("NFC");
-    const existing = await this.transfers.findShipmentByReference(input.organizationId, reference);
+    const existing = await this.transfers.findShipmentByReference(
+      input.organizationId,
+      reference,
+    );
     if (existing !== null) {
-      if (existing.transferId.value !== input.transferId) throw new DomainError("transfers.shipment_reference_taken", "The shipment reference is already used.");
+      if (existing.transferId.value !== input.transferId)
+        throw new DomainError(
+          "transfers.shipment_reference_taken",
+          "The shipment reference is already used.",
+        );
       return existing;
     }
-    const transfer = await this.transfers.findDraft(input.organizationId, input.transferId);
-    if (transfer === null) throw new DomainError("transfers.draft_not_found", "The draft transfer does not belong to this organization.");
-    await this.authorization.authorize(input.organizationId, transfer.sourceShopId.value, input.actorId);
-    return this.transfers.dispatch(StockTransferShipment.create(transfer, reference, input.actorId, this.clock.now()));
+    const transfer = await this.transfers.findDraft(
+      input.organizationId,
+      input.transferId,
+    );
+    if (transfer === null)
+      throw new DomainError(
+        "transfers.draft_not_found",
+        "The draft transfer does not belong to this organization.",
+      );
+    await this.authorization.authorize(
+      input.organizationId,
+      transfer.sourceShopId.value,
+      input.actorId,
+    );
+    return this.transfers.dispatch(
+      StockTransferShipment.create(
+        transfer,
+        reference,
+        input.actorId,
+        this.clock.now(),
+      ),
+    );
   }
 }

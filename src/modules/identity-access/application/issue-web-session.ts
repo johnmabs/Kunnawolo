@@ -1,7 +1,10 @@
 import type { Clock } from "@/shared/domain/clock";
 import type { IdentifierGenerator } from "@/modules/organization/application/ports/identifier-generator";
 import { WebSession } from "../domain/web-session";
-import type { OpaqueTokenGenerator, OpaqueTokenHasher } from "./ports/opaque-token";
+import type {
+  OpaqueTokenGenerator,
+  OpaqueTokenHasher,
+} from "./ports/opaque-token";
 import type { WebAuthenticationRepository } from "./ports/web-authentication-repository";
 import { Identifier } from "@/shared/domain/identifier";
 

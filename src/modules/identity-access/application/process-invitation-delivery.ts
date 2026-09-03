@@ -10,19 +10,37 @@ function retryAt(now: Date, attemptCount: number): Date {
 }
 
 export class ProcessInvitationDelivery {
-  public constructor(private readonly outbox: InvitationDeliveryOutbox, private readonly delivery: InvitationDelivery, private readonly clock: Clock) {}
+  public constructor(
+    private readonly outbox: InvitationDeliveryOutbox,
+    private readonly delivery: InvitationDelivery,
+    private readonly clock: Clock,
+  ) {}
 
   public async execute(id?: string): Promise<InvitationDeliveryResult> {
     const now = this.clock.now();
-    const message = await this.outbox.claim({ id, now, lockedBefore: new Date(now.getTime() - 10 * 60_000) });
+    const message = await this.outbox.claim({
+      id,
+      now,
+      lockedBefore: new Date(now.getTime() - 10 * 60_000),
+    });
     if (message === null) return "IDLE";
     try {
-      await this.delivery.send({ ...message, idempotencyKey: `membership-invitation/${message.id}` });
+      await this.delivery.send({
+        ...message,
+        idempotencyKey: `membership-invitation/${message.id}`,
+      });
       await this.outbox.markSent(message.id, this.clock.now());
       return "SENT";
     } catch (error) {
-      const code = error instanceof Error && "code" in error ? String(error.code) : "iam.invitation_delivery_failed";
-      await this.outbox.markFailed(message.id, code, retryAt(this.clock.now(), message.attemptCount));
+      const code =
+        error instanceof Error && "code" in error
+          ? String(error.code)
+          : "iam.invitation_delivery_failed";
+      await this.outbox.markFailed(
+        message.id,
+        code,
+        retryAt(this.clock.now(), message.attemptCount),
+      );
       return "FAILED";
     }
   }

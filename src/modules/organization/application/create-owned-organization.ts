@@ -4,11 +4,26 @@ import { Organization, type OrganizationProfile } from "../domain/organization";
 import { Shop } from "../domain/shop";
 
 export class CreateOwnedOrganization {
-  public constructor(private readonly repository: OrganizationOnboardingRepository, private readonly identifiers: IdentifierGenerator) {}
+  public constructor(
+    private readonly repository: OrganizationOnboardingRepository,
+    private readonly identifiers: IdentifierGenerator,
+  ) {}
 
-  public async execute(input: OrganizationProfile & Readonly<{ ownerUserAccountId: string; shopCode: string; shopName: string }>) {
+  public async execute(
+    input: OrganizationProfile &
+      Readonly<{
+        ownerUserAccountId: string;
+        shopCode: string;
+        shopName: string;
+      }>,
+  ) {
     const organization = Organization.create(this.identifiers.next(), input);
-    const initialShop = Shop.create(this.identifiers.next(), organization.id, input.shopCode, input.shopName);
+    const initialShop = Shop.create(
+      this.identifiers.next(),
+      organization.id,
+      input.shopCode,
+      input.shopName,
+    );
     await this.repository.createWithOwner({
       organization,
       initialShop,

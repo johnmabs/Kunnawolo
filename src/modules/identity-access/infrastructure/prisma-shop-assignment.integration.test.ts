@@ -12,15 +12,55 @@ const membershipId = "assignment-test-membership";
 const shopId = "assignment-test-shop";
 
 beforeAll(async () => {
-  await prisma.organization.create({ data: { id: organizationId, name: "Assignment", currency: "XOF", shops: { create: { id: shopId, code: "ASSIGN", name: "Sɔgɔma" } }, memberships: { create: { id: membershipId, status: "ACTIVE", role: "MANAGER", userAccount: { create: { id: accountId, email: "assignment@example.com", displayName: "Test" } } } } } });
+  await prisma.organization.create({
+    data: {
+      id: organizationId,
+      name: "Assignment",
+      currency: "XOF",
+      shops: { create: { id: shopId, code: "ASSIGN", name: "Sɔgɔma" } },
+      memberships: {
+        create: {
+          id: membershipId,
+          status: "ACTIVE",
+          role: "MANAGER",
+          userAccount: {
+            create: {
+              id: accountId,
+              email: "assignment@example.com",
+              displayName: "Test",
+            },
+          },
+        },
+      },
+    },
+  });
 });
-afterAll(async () => { await prisma.shopAssignment.deleteMany({ where: { membershipId } }); await prisma.organizationMembership.deleteMany({ where: { id: membershipId } }); await prisma.shop.deleteMany({ where: { id: shopId } }); await prisma.userAccount.deleteMany({ where: { id: accountId } }); await prisma.organization.deleteMany({ where: { id: organizationId } }); await prisma.$disconnect(); });
+afterAll(async () => {
+  await prisma.shopAssignment.deleteMany({ where: { membershipId } });
+  await prisma.organizationMembership.deleteMany({
+    where: { id: membershipId },
+  });
+  await prisma.shop.deleteMany({ where: { id: shopId } });
+  await prisma.userAccount.deleteMany({ where: { id: accountId } });
+  await prisma.organization.deleteMany({ where: { id: organizationId } });
+  await prisma.$disconnect();
+});
 
 describe("PrismaShopAssignmentRepository", () => {
   it("stores idempotent shop assignments", async () => {
     const assignments = new PrismaShopAssignmentRepository(prisma);
-    await assignments.assign({ id: "assignment-test-id", membershipId, shopId });
-    await assignments.assign({ id: "assignment-test-id-2", membershipId, shopId });
-    await expect(assignments.findShopIdsForMembership(membershipId)).resolves.toEqual([shopId]);
+    await assignments.assign({
+      id: "assignment-test-id",
+      membershipId,
+      shopId,
+    });
+    await assignments.assign({
+      id: "assignment-test-id-2",
+      membershipId,
+      shopId,
+    });
+    await expect(
+      assignments.findShopIdsForMembership(membershipId),
+    ).resolves.toEqual([shopId]);
   });
 });
