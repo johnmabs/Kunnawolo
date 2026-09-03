@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle, ToastProvider } from "@/components/ui";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
@@ -37,6 +38,10 @@ function AppShellContent({ children }: Readonly<{ children: ReactNode }>) {
 }
 
 export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
+  const pathname = usePathname();
+  if (pathname === "/login" || pathname === "/signup" || pathname === "/onboarding" || pathname.startsWith("/invitations/")) {
+    return <ToastProvider>{children}</ToastProvider>;
+  }
   return (
     <WorkspaceProvider>
       <AppShellContent>{children}</AppShellContent>
