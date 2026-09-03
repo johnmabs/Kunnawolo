@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useWorkspace } from "@/components/layout";
 import { Badge, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { ResendInvitationForm } from "./resend-invitation-form";
 
 type DeliveryStatus = "PENDING" | "PROCESSING" | "FAILED" | "SENT" | "CANCELLED";
-type Member = Readonly<{ id: string; displayName: string; email: string; status: "INVITED" | "ACTIVE" | "INACTIVE"; role: string; invitedAt: string; invitationExpiresAt: string | null; invitationId: string | null; invitationDeliveryStatus: DeliveryStatus | null; invitationDeliveryAttempts: number }>;
+export type Member = Readonly<{ id: string; displayName: string; email: string; status: "INVITED" | "ACTIVE" | "INACTIVE"; role: string; invitedAt: string; invitationExpiresAt: string | null; invitationId: string | null; invitationDeliveryStatus: DeliveryStatus | null; invitationDeliveryAttempts: number }>;
 const status = { ACTIVE: { label: "Actif", variant: "success" }, INVITED: { label: "Invité", variant: "warning" }, INACTIVE: { label: "Inactif", variant: "neutral" } } as const;
 const roles: Readonly<Record<string, string>> = { OWNER: "Propriétaire", MANAGER: "Responsable", CASHIER: "Caissier" };
 const deliveries: Readonly<Record<DeliveryStatus, string>> = { PENDING: "Envoi en attente", PROCESSING: "Envoi en cours", FAILED: "Échec de l’envoi", SENT: "Email envoyé", CANCELLED: "Envoi annulé" };
@@ -16,10 +16,11 @@ function DeliveryDetails({ member }: Readonly<{ member: Member }>) {
   return <p className={member.invitationDeliveryStatus === "FAILED" ? "mt-1 text-xs font-medium text-danger" : "mt-1 text-xs text-text-secondary"}>{deliveries[member.invitationDeliveryStatus]}{member.invitationDeliveryStatus === "FAILED" ? ` · ${member.invitationDeliveryAttempts} tentative${member.invitationDeliveryAttempts > 1 ? "s" : ""}` : ""}</p>;
 }
 
-export function MembersList() {
+export function MembersList({ initialItems = [], initialOrganizationId = "" }: Readonly<{ initialItems?: readonly Member[]; initialOrganizationId?: string }>) {
   const { organizationId } = useWorkspace();
-  const [items, setItems] = useState<readonly Member[]>([]);
-  const [loading, setLoading] = useState(true);
+  const initialPending = useRef(initialOrganizationId);
+  const [items, setItems] = useState<readonly Member[]>(initialItems);
+  const [loading, setLoading] = useState(initialOrganizationId.length === 0);
   const [error, setError] = useState<string | null>(null);
   const load = useCallback(async () => {
     if (!organizationId) return;
@@ -32,7 +33,7 @@ export function MembersList() {
     } catch (failure) { setError(failure instanceof Error ? failure.message : "Erreur inattendue"); }
     finally { setLoading(false); }
   }, [organizationId]);
-  useEffect(() => { const reload = () => void load(); reload(); window.addEventListener("astu:members-changed", reload); return () => window.removeEventListener("astu:members-changed", reload); }, [load]);
+  useEffect(() => { const reload = () => void load(); if (initialPending.current === organizationId) initialPending.current = ""; else reload(); window.addEventListener("astu:members-changed", reload); return () => window.removeEventListener("astu:members-changed", reload); }, [load, organizationId]);
 
   if (loading) return <div className="grid gap-3"><Skeleton className="h-16" /><Skeleton className="h-16" /></div>;
   if (error) return <ErrorState description={error} onRetry={() => void load()} />;
