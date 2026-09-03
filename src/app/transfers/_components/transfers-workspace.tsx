@@ -41,15 +41,15 @@ function TransferCard({ access, onDraft, onReceive, transfer }: Readonly<{ acces
 }
 
 export function TransfersWorkspace() {
-  const { apiKey, organizationId, workspaceShopId } = useWorkspace();
-  const access = useMemo<TransferAccess>(() => ({ apiKey, organizationId: organizationId.trim(), shopId: workspaceShopId.trim() }), [apiKey, organizationId, workspaceShopId]);
+  const { organizationId, workspaceShopId } = useWorkspace();
+  const access = useMemo<TransferAccess>(() => ({ organizationId: organizationId.trim(), shopId: workspaceShopId.trim() }), [organizationId, workspaceShopId]);
   const [list, setList] = useState<TransferList | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TransferTab>("dispatch");
   const [draft, setDraft] = useState<TransferItem | null>(null);
   const [reception, setReception] = useState<TransferItem | null>(null);
-  const ready = access.apiKey.trim().length > 0 && access.organizationId.length > 0 && access.shopId.length > 0;
+  const ready = access.organizationId.length > 0 && access.shopId.length > 0;
 
   const load = useCallback(async () => {
     if (!ready) return;
@@ -77,7 +77,7 @@ export function TransfersWorkspace() {
     return items;
   }, [access.shopId, list, tab]);
 
-  if (!ready) return <PageContainer><EmptyState action={<Button asChild><Link href="/">Configurer le poste</Link></Button>} description="Renseignez l’organisation, la clé d’accès et la boutique de travail depuis le tableau de bord." title="Contexte de transfert incomplet" /></PageContainer>;
+  if (!ready) return <PageContainer><EmptyState action={<Button asChild><Link href="/administration/shops">Gérer les boutiques</Link></Button>} description="Sélectionnez une boutique de travail pour gérer les transferts." title="Boutique de travail requise" /></PageContainer>;
 
   return (
     <PageContainer>

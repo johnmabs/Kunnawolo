@@ -1,32 +1,22 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
+import { useRouter } from "next/navigation";
 
-type WorkspaceContextValue = Readonly<{
-  apiKey: string;
-  compact: boolean;
-  organizationId: string;
-  setApiKey: Dispatch<SetStateAction<string>>;
-  setCompact: Dispatch<SetStateAction<boolean>>;
-  setOrganizationId: Dispatch<SetStateAction<string>>;
-  setWorkspaceShopId: Dispatch<SetStateAction<string>>;
-  workspaceShopId: string;
-}>;
-
+export type WorkspaceOrganization = Readonly<{ id: string; name: string; currency: string; role: string; preference: Readonly<{ shopId: string | null; isCompact: boolean }> | null; shops: readonly Readonly<{ id: string; name: string; code: string }>[] }>;
+export type WorkspaceAccount = Readonly<{ id: string; email: string; displayName: string }>;
+type WorkspaceContextValue = Readonly<{ account: WorkspaceAccount | null; compact: boolean; loading: boolean; organizationId: string; organizations: readonly WorkspaceOrganization[]; setCompact: Dispatch<SetStateAction<boolean>>; setOrganizationId: (organizationId: string) => void; setWorkspaceShopId: Dispatch<SetStateAction<string>>; workspaceShopId: string }>;
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
 export function WorkspaceProvider({ children }: Readonly<{ children: ReactNode }>) {
-  const [organizationId, setOrganizationId] = useState("");
-  const [workspaceShopId, setWorkspaceShopId] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [compact, setCompact] = useState(false);
-  const value = useMemo(() => ({ apiKey, compact, organizationId, setApiKey, setCompact, setOrganizationId, setWorkspaceShopId, workspaceShopId }), [apiKey, compact, organizationId, workspaceShopId]);
-
+  const router = useRouter();
+  const [organizationId, setOrganizationIdState] = useState(""); const [workspaceShopId, setWorkspaceShopId] = useState(""); const [account, setAccount] = useState<WorkspaceAccount | null>(null); const [organizations, setOrganizations] = useState<readonly WorkspaceOrganization[]>([]); const [loading, setLoading] = useState(true); const [compact, setCompact] = useState(false);
+  useEffect(() => { let active = true; void fetch("/api/auth/me", { cache: "no-store" }).then(async (response) => { if (response.status === 401) { router.replace(`/login?next=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`); return null; } if (!response.ok) throw new Error("auth.session_read_failed"); return response.json() as Promise<{ account: WorkspaceAccount; organizations: readonly WorkspaceOrganization[] }>; }).then((session) => { if (!active || session === null) return; setAccount(session.account); setOrganizations(session.organizations); if (session.organizations.length === 0) { router.replace("/onboarding"); return; } const savedOrganization = window.localStorage.getItem("astu.workspace.organization"); const selected = session.organizations.find(({ id }) => id === savedOrganization) ?? session.organizations[0]; setOrganizationIdState(selected.id); setCompact(selected.preference?.isCompact ?? false); const preferredShop = selected.preference?.shopId ?? window.localStorage.getItem(`astu.workspace.shop.${selected.id}`); setWorkspaceShopId(selected.shops.find(({ id }) => id === preferredShop)?.id ?? selected.shops[0]?.id ?? ""); }).catch(() => { if (active) router.replace("/login"); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, [router]);
+  useEffect(() => { if (organizationId) window.localStorage.setItem("astu.workspace.organization", organizationId); }, [organizationId]);
+  useEffect(() => { if (organizationId && workspaceShopId) window.localStorage.setItem(`astu.workspace.shop.${organizationId}`, workspaceShopId); }, [organizationId, workspaceShopId]);
+  const setOrganizationId = useCallback((value: string) => { const organization = organizations.find(({ id }) => id === value); setOrganizationIdState(value); if (organization) { const preferredShop = organization.preference?.shopId ?? window.localStorage.getItem(`astu.workspace.shop.${organization.id}`); setWorkspaceShopId(organization.shops.find(({ id }) => id === preferredShop)?.id ?? organization.shops[0]?.id ?? ""); setCompact(organization.preference?.isCompact ?? false); } }, [organizations]);
+  const value = useMemo(() => ({ account, compact, loading, organizationId, organizations, setCompact, setOrganizationId, setWorkspaceShopId, workspaceShopId }), [account, compact, loading, organizationId, organizations, setOrganizationId, workspaceShopId]);
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }
 
-export function useWorkspace(): WorkspaceContextValue {
-  const context = useContext(WorkspaceContext);
-  if (context === null) throw new Error("useWorkspace must be used within WorkspaceProvider.");
-  return context;
-}
+export function useWorkspace(): WorkspaceContextValue { const context = useContext(WorkspaceContext); if (context === null) throw new Error("useWorkspace must be used within WorkspaceProvider."); return context; }

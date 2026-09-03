@@ -1,7 +1,7 @@
 import { InventoryApiError, type InventoryAccess, type InventorySessionList, type StockDetail, type StockList } from "./types";
 
 async function request<T>(url: string, access: InventoryAccess, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, { ...init, headers: { Authorization: `Bearer ${access.apiKey}`, ...(init?.body ? { "Content-Type": "application/json" } : {}), ...init?.headers }, cache: "no-store" });
+  const response = await fetch(url, { ...init, headers: { ...(init?.body ? { "Content-Type": "application/json" } : {}), ...init?.headers }, cache: "no-store" });
   const body = await response.json() as T & Readonly<{ code?: string }>;
   if (!response.ok) throw new InventoryApiError(body.code ?? "inventory.unknown_error");
   return body;

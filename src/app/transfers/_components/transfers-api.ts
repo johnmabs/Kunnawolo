@@ -4,7 +4,6 @@ async function request<T>(url: string, access: TransferAccess, init?: RequestIni
   const response = await fetch(url, {
     ...init,
     headers: {
-      Authorization: `Bearer ${access.apiKey}`,
       ...(init?.body ? { "Content-Type": "application/json" } : {}),
       ...init?.headers,
     },

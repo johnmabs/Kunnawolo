@@ -1,4 +1,4 @@
-export type InventoryAccess = Readonly<{ apiKey: string; organizationId: string; shopId: string }>;
+export type InventoryAccess = Readonly<{ organizationId: string; shopId: string }>;
 
 export type StockItem = Readonly<{
   barcode: string | null;

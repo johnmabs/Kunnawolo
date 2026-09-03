@@ -8,11 +8,11 @@ import { InventorySessions } from "./inventory-sessions";
 import { StockView } from "./stock-view";
 
 export function InventoryWorkspace() {
-  const { apiKey, organizationId, workspaceShopId } = useWorkspace();
+  const { organizationId, workspaceShopId } = useWorkspace();
   const [tab, setTab] = useState("stock");
-  const access = useMemo(() => ({ apiKey, organizationId: organizationId.trim(), shopId: workspaceShopId.trim() }), [apiKey, organizationId, workspaceShopId]);
-  const ready = access.apiKey.trim().length > 0 && access.organizationId.length > 0 && access.shopId.length > 0;
-  if (!ready) return <PageContainer><EmptyState action={<Button asChild><Link href="/">Configurer le poste</Link></Button>} description="Renseignez l’organisation, la clé d’accès et la boutique de travail depuis le tableau de bord." title="Contexte de stock incomplet" /></PageContainer>;
+  const access = useMemo(() => ({ organizationId: organizationId.trim(), shopId: workspaceShopId.trim() }), [organizationId, workspaceShopId]);
+  const ready = access.organizationId.length > 0 && access.shopId.length > 0;
+  if (!ready) return <PageContainer><EmptyState action={<Button asChild><Link href="/administration/shops">Gérer les boutiques</Link></Button>} description="Sélectionnez ou créez une boutique de travail pour gérer son stock." title="Boutique de travail requise" /></PageContainer>;
 
   return (
     <PageContainer>

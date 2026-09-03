@@ -5,7 +5,6 @@ async function apiRequest<T>(url: string, access: SalesAccess, init?: RequestIni
   const response = await fetch(url, {
     ...init,
     headers: {
-      Authorization: `Bearer ${access.apiKey}`,
       ...(init?.body ? { "Content-Type": "application/json" } : {}),
       ...init?.headers,
     },

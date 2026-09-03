@@ -1,5 +1,4 @@
 export type TransferAccess = Readonly<{
-  apiKey: string;
   organizationId: string;
   shopId: string;
 }>;

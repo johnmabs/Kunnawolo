@@ -1,4 +1,4 @@
-export type CatalogAccess = Readonly<{ apiKey: string; organizationId: string }>;
+export type CatalogAccess = Readonly<{ organizationId: string }>;
 export type ProductItem = Readonly<{ id: string; name: string; code: string | null; barcode: string | null; packaging: string | null; form: string | null; isActive: boolean; trackInventory: boolean }>;
 export type CurrentPricing = Readonly<{ createdAt: string; reference: string; referenceCostMinor: number; salePriceMinor: number }>;
 export type ProductDetail = ProductItem & Readonly<{ pricing: Readonly<{ currency: string; current: CurrentPricing | null }> }>;

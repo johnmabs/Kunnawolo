@@ -1,7 +1,7 @@
 import { CatalogApiError, type CatalogAccess, type ProductDetail, type ProductInput, type ProductItem, type ProductList } from "./types";
 
 async function request<T>(url: string, access: CatalogAccess, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, { ...init, headers: { Authorization: `Bearer ${access.apiKey}`, ...(init?.body ? { "Content-Type": "application/json" } : {}), ...init?.headers }, cache: "no-store" });
+  const response = await fetch(url, { ...init, headers: { ...(init?.body ? { "Content-Type": "application/json" } : {}), ...init?.headers }, cache: "no-store" });
   const body = await response.json() as T & Readonly<{ code?: string }>;
   if (!response.ok) throw new CatalogApiError(body.code ?? "catalog.unknown_error");
   return body;

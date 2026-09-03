@@ -9,7 +9,8 @@ import { useWorkspace, WorkspaceProvider } from "./workspace-context";
 
 function AppShellContent({ children }: Readonly<{ children: ReactNode }>) {
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
-  const { compact, organizationId, workspaceShopId } = useWorkspace();
+  const { account, compact, organizationId, organizations, setOrganizationId, setWorkspaceShopId, workspaceShopId } = useWorkspace();
+  const organization = organizations.find(({ id }) => id === organizationId);
 
   return (
     <ToastProvider>
@@ -19,9 +20,13 @@ function AppShellContent({ children }: Readonly<{ children: ReactNode }>) {
         <div className="min-w-0">
           <Topbar
             onMenuOpen={() => setMobileNavigationOpen(true)}
-            organizationLabel={organizationId.trim() ? `ID : ${organizationId.trim()}` : "Non sélectionnée"}
-            shopLabel={workspaceShopId.trim() ? `ID : ${workspaceShopId.trim()}` : "Boutique non définie"}
-            userLabel="Identité indisponible"
+            onOrganizationChange={setOrganizationId}
+            onShopChange={setWorkspaceShopId}
+            organizationId={organizationId}
+            organizations={organizations}
+            shopId={workspaceShopId}
+            shops={organization?.shops ?? []}
+            userLabel={account?.displayName ?? "Chargement…"}
           />
           <main id="main-content" tabIndex={-1}>{children}</main>
         </div>

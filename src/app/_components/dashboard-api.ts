@@ -9,14 +9,14 @@ function parameters(access: DashboardAccess, filters: DashboardFilters) {
 }
 
 export async function loadDashboard(access: DashboardAccess, filters: DashboardFilters): Promise<Dashboard> {
-  const response = await fetch(`/api/reports/dashboard?${parameters(access, filters)}`, { headers: { Authorization: `Bearer ${access.apiKey}` }, cache: "no-store" });
+  const response = await fetch(`/api/reports/dashboard?${parameters(access, filters)}`, { cache: "no-store" });
   const body = await response.json() as Dashboard & Readonly<{ code?: string }>;
   if (!response.ok) throw new DashboardApiError(body.code ?? "reporting.dashboard_failed");
   return body;
 }
 
 export async function exportDashboard(access: DashboardAccess, filters: DashboardFilters): Promise<void> {
-  const response = await fetch("/api/reports/dashboard/export", { method: "POST", headers: { Authorization: `Bearer ${access.apiKey}`, "Content-Type": "application/json" }, body: JSON.stringify({ organizationId: access.organizationId, shopId: filters.shopId, occurredFrom: filters.from ? `${filters.from}T00:00:00.000Z` : null, occurredTo: filters.to ? `${filters.to}T23:59:59.999Z` : null, reference: crypto.randomUUID() }) });
+  const response = await fetch("/api/reports/dashboard/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ organizationId: access.organizationId, shopId: filters.shopId, occurredFrom: filters.from ? `${filters.from}T00:00:00.000Z` : null, occurredTo: filters.to ? `${filters.to}T23:59:59.999Z` : null, reference: crypto.randomUUID() }) });
   if (!response.ok) { const body = await response.json() as Readonly<{ code?: string }>; throw new DashboardApiError(body.code ?? "reporting.export_failed"); }
   const blob = await response.blob(); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = `tableau-de-bord-${new Date().toISOString().slice(0, 10)}.csv`; link.click(); URL.revokeObjectURL(url);
 }

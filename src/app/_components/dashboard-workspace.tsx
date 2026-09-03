@@ -8,7 +8,7 @@ import type { Dashboard, DashboardFilters } from "./dashboard-types";
 import { WorkspaceSettings } from "./workspace-settings";
 
 export function DashboardWorkspace() {
-  const { apiKey, compact, organizationId, workspaceShopId } = useWorkspace(); const { toast } = useToast(); const access = useMemo(() => ({ apiKey, organizationId: organizationId.trim() }), [apiKey, organizationId]); const ready = Boolean(access.apiKey.trim() && access.organizationId);
+  const { compact, organizationId, workspaceShopId } = useWorkspace(); const { toast } = useToast(); const access = useMemo(() => ({ organizationId: organizationId.trim() }), [organizationId]); const ready = Boolean(access.organizationId);
   const [scope, setScope] = useState<"organization" | "workspace">("organization"); const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [dashboard, setDashboard] = useState<Dashboard | null>(null); const [loading, setLoading] = useState(false); const [exporting, setExporting] = useState(false); const [error, setError] = useState<string | null>(null);
   const filters: DashboardFilters = { shopId: scope === "workspace" ? workspaceShopId.trim() || null : null, from, to }; const validFilters = !(from && to && from > to) && (scope === "organization" || Boolean(filters.shopId));
   async function refresh() { if (!ready || !validFilters) return; setLoading(true); setError(null); try { setDashboard(await loadDashboard(access, filters)); } catch (failure) { setDashboard(null); setError(dashboardErrorMessage(failure)); } finally { setLoading(false); } }

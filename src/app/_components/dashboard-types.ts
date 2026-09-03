@@ -1,4 +1,4 @@
-export type DashboardAccess = Readonly<{ apiKey: string; organizationId: string }>;
+export type DashboardAccess = Readonly<{ organizationId: string }>;
 export type DashboardFilters = Readonly<{ shopId: string | null; from: string; to: string }>;
 type Money = Readonly<{ amountMinor: number; currency: string }>;
 type Quantity = Readonly<{ value: number }>;

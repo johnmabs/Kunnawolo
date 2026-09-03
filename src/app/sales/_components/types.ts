@@ -44,7 +44,6 @@ export type SalePaymentDto = Readonly<{
 export type PaymentMethod = "CASH" | "MOBILE_MONEY" | "BANK_TRANSFER";
 
 export type SalesAccess = Readonly<{
-  apiKey: string;
   organizationId: string;
 }>;
 

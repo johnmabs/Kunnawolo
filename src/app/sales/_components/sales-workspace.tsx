@@ -17,10 +17,10 @@ import { addLine, createCart, finalizeCart, paySale, removeLine, updateLine } fr
 import type { PaymentMethod, ProductSearchItem, SaleCartDto, SaleLineDto, SalePaymentDto } from "./types";
 
 export function SalesWorkspace() {
-  const { apiKey, organizationId, workspaceShopId } = useWorkspace();
+  const { organizationId, workspaceShopId } = useWorkspace();
   const { toast } = useToast();
-  const access = useMemo(() => ({ apiKey, organizationId: organizationId.trim() }), [apiKey, organizationId]);
-  const ready = access.apiKey.trim().length > 0 && access.organizationId.length > 0 && workspaceShopId.trim().length > 0;
+  const access = useMemo(() => ({ organizationId: organizationId.trim() }), [organizationId]);
+  const ready = access.organizationId.length > 0 && workspaceShopId.trim().length > 0;
   const [cart, setCart] = useState<SaleCartDto | null>(null);
   const [payment, setPayment] = useState<SalePaymentDto | null>(null);
   const [loadingCart, setLoadingCart] = useState(false);
@@ -114,7 +114,7 @@ export function SalesWorkspace() {
   }
 
   if (!ready) {
-    return <PageContainer><EmptyState action={<Button asChild><Link href="/">Configurer le poste</Link></Button>} description="Renseignez l’organisation, la clé d’accès et la boutique de travail depuis le tableau de bord." title="Contexte de vente incomplet" /></PageContainer>;
+    return <PageContainer><EmptyState action={<Button asChild><Link href="/administration/shops">Gérer les boutiques</Link></Button>} description="Sélectionnez une boutique de travail pour commencer une vente." title="Boutique de travail requise" /></PageContainer>;
   }
 
   if (payment) return <SaleSuccess onNewSale={() => void startSale()} payment={payment} />;

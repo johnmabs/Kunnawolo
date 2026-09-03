@@ -11,11 +11,10 @@ export async function GET() {
   const prisma = createPrismaClient(databaseUrl);
   try {
     const account = await authenticateWebRequest(prisma);
-    const memberships = await prisma.organizationMembership.findMany({
-      where: { userAccountId: account.id.value, status: "ACTIVE" },
-      include: { organization: true, shopAssignments: { include: { shop: true } } },
-      orderBy: { organization: { name: "asc" } },
-    });
+    const [memberships, preferences] = await Promise.all([
+      prisma.organizationMembership.findMany({ where: { userAccountId: account.id.value, status: "ACTIVE" }, include: { organization: true, shopAssignments: { include: { shop: true } } }, orderBy: { organization: { name: "asc" } } }),
+      prisma.workspacePreference.findMany({ where: { actorId: account.id.value } }),
+    ]);
     return NextResponse.json({
       account: { id: account.id.value, email: account.email, displayName: account.displayName },
       organizations: memberships.map((membership) => ({
@@ -23,6 +22,7 @@ export async function GET() {
         name: membership.organization.name,
         currency: membership.organization.currency,
         role: membership.role,
+        preference: (() => { const preference = preferences.find(({ organizationId }) => organizationId === membership.organizationId); return preference ? { shopId: preference.shopId, isCompact: preference.isCompact } : null; })(),
         shops: membership.shopAssignments.filter(({ shop }) => shop.isActive).map(({ shop }) => ({ id: shop.id, name: shop.name, code: shop.code })),
       })),
     });
