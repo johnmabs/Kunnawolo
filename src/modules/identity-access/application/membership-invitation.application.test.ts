@@ -5,14 +5,18 @@ import type { PasswordHash, PasswordHasher } from "./ports/password-hasher";
 import type { InvitationDetails, MembershipInvitationRepository } from "./ports/membership-invitation-repository";
 import { InviteMember } from "./invite-member";
 import { AcceptMembershipInvitation } from "./accept-membership-invitation";
+import { ResendMembershipInvitation } from "./resend-membership-invitation";
 
 class Invitations implements MembershipInvitationRepository {
   public account: UserAccount | null = null;
   public details: InvitationDetails | null = null;
   public accepted: Parameters<MembershipInvitationRepository["accept"]>[0] | null = null;
+  public reissued: Parameters<MembershipInvitationRepository["reissue"]>[0] | null = null;
   public async authorizeInvitation() {}
   public async findAccountByEmail() { return this.account; }
   public async create(input: Parameters<MembershipInvitationRepository["create"]>[0]) { this.account = input.account; this.details = { account: input.account, hasCredential: !input.createAccount, invitation: input.invitation, membership: input.membership, organizationName: "ASTU SARL" }; }
+  public async findPendingById() { return this.details; }
+  public async reissue(input: Parameters<MembershipInvitationRepository["reissue"]>[0]) { this.reissued = input; if (this.details) this.details = { ...this.details, invitation: input.invitation }; }
   public async findByTokenHash() { return this.details; }
   public async accept(input: Parameters<MembershipInvitationRepository["accept"]>[0]) { this.accepted = input; }
 }
@@ -46,5 +50,14 @@ describe("membership invitations", () => {
     repository.account = UserAccount.create(ids.next(), "user@example.com", "User");
     await new InviteMember(repository, ids, opaque, opaque, clock, "https://sales.example").execute({ organizationId: "org", invitedByActorId: "owner", email: "user@example.com", displayName: "Ignored", organizationName: "ASTU SARL" });
     await expect(new AcceptMembershipInvitation(repository, opaque, new Passwords(), clock).execute({ token: "temporary-token", password: null, authenticatedUserAccountId: "someone-else" })).rejects.toMatchObject({ code: "auth.invitation_login_required" });
+  });
+
+  it("rotates the token and queues a fresh delivery when sending again", async () => {
+    const repository = new Invitations();
+    await new InviteMember(repository, ids, opaque, opaque, clock, "https://sales.example").execute({ organizationId: "org", invitedByActorId: "owner", email: "user@example.com", displayName: "User", organizationName: "ASTU SARL" });
+    const result = await new ResendMembershipInvitation(repository, ids, { generate: () => "replacement-token" }, { hash: () => "b".repeat(64) }, clock, "https://sales.example").execute({ organizationId: "org", invitationId: repository.details!.invitation.id.value, actorId: "owner" });
+    expect(result.acceptanceUrl).toContain("replacement-token");
+    expect(repository.reissued?.invitation.tokenHash).toBe("b".repeat(64));
+    expect(repository.reissued?.delivery.id).toBe(result.deliveryId);
   });
 });

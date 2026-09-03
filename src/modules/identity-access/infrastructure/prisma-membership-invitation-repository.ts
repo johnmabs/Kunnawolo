@@ -27,6 +27,27 @@ export class PrismaMembershipInvitationRepository implements MembershipInvitatio
       await transaction.organizationAudit.create({ data: { id: crypto.randomUUID(), organizationId: input.invitation.organizationId.value, actorId: input.invitation.invitedByActorId.value, action: "membership.invited" } });
     });
   }
+  public async findPendingById(organizationId: string, invitationId: string) {
+    const row = await this.prisma.membershipInvitation.findFirst({ where: { id: invitationId, organizationId, acceptedAt: null, membership: { status: "INVITED" } }, include: { organization: true, membership: { include: { userAccount: { include: { passwordCredential: true } } } } } });
+    if (row === null) return null;
+    const account = UserAccount.create(Identifier.fromString(row.membership.userAccount.id), row.membership.userAccount.email, row.membership.userAccount.displayName);
+    return {
+      account,
+      hasCredential: row.membership.userAccount.passwordCredential !== null,
+      organizationName: row.organization.name,
+      invitation: MembershipInvitation.restore({ id: Identifier.fromString(row.id), organizationId: Identifier.fromString(row.organizationId), membershipId: Identifier.fromString(row.membershipId), invitedByActorId: Identifier.fromString(row.invitedByActorId), email: row.email, tokenHash: row.tokenHash, expiresAt: row.expiresAt, acceptedAt: row.acceptedAt }),
+      membership: OrganizationMembership.invite(Identifier.fromString(row.membership.id), Identifier.fromString(row.membership.organizationId), Identifier.fromString(row.membership.userAccountId)),
+    };
+  }
+  public async reissue(input: Parameters<MembershipInvitationRepository["reissue"]>[0]) {
+    await this.prisma.$transaction(async (transaction) => {
+      const updated = await transaction.membershipInvitation.updateMany({ where: { id: input.invitation.id.value, organizationId: input.invitation.organizationId.value, acceptedAt: null, membership: { status: "INVITED" } }, data: { tokenHash: input.invitation.tokenHash, expiresAt: input.invitation.expiresAt } });
+      if (updated.count !== 1) throw new DomainError("iam.invitation_not_pending", "Only a pending membership invitation can be sent again.");
+      await transaction.invitationDeliveryOutbox.updateMany({ where: { invitationId: input.invitation.id.value, status: { in: ["PENDING", "PROCESSING", "FAILED"] } }, data: { status: "CANCELLED", acceptanceUrl: null, lockedAt: null } });
+      await transaction.invitationDeliveryOutbox.create({ data: input.delivery });
+      await transaction.organizationAudit.create({ data: { id: crypto.randomUUID(), organizationId: input.invitation.organizationId.value, actorId: input.invitation.invitedByActorId.value, action: "membership.invitation_resent" } });
+    });
+  }
   public async findByTokenHash(tokenHash: string) {
     const row = await this.prisma.membershipInvitation.findUnique({ where: { tokenHash }, include: { organization: true, membership: { include: { userAccount: { include: { passwordCredential: true } } } } } });
     if (row === null) return null;
