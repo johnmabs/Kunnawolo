@@ -7,6 +7,7 @@ export type MembershipListItem = Readonly<{
   role: string;
   invitedAt: Date;
   invitationExpiresAt: Date | null;
+  shopIds: readonly string[];
 }>;
 
 export interface MembershipConsultationRepository {
